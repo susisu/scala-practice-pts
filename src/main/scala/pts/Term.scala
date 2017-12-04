@@ -52,7 +52,7 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
 // product
 case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
   override def toString(): String =
-    if (this.body.hasFreeVar(paramName)) {
+    if (!this.body.hasFreeVar(paramName)) {
       val domStr = this.paramType match {
         case TmVar(_, _) | TmConst(_, _) | TmApp(_, _, _) => this.paramType.toString()
         case _ => "(" + this.paramType.toString() + ")"
