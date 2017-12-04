@@ -1,6 +1,7 @@
 package pts
 
 sealed abstract class Term[I] {
+  def getInfo(): I
   def hasFreeVar(name: String): Boolean
 }
 
@@ -8,12 +9,16 @@ sealed abstract class Term[I] {
 case class TmVar[I](info: I, name: String) extends Term[I] {
   override def toString(): String = this.name
 
+  def getInfo(): I = this.info
+
   def hasFreeVar(name: String): Boolean = this.name == name
 }
 
 // constant
 case class TmConst[I](info: I, name: String) extends Term[I] {
   override def toString(): String = this.name
+
+  def getInfo(): I = this.info
 
   def hasFreeVar(name: String): Boolean = false
 }
@@ -32,6 +37,8 @@ case class TmApp[I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
     funcStr + " " + argStr
   }
 
+  def getInfo(): I = this.info
+
   def hasFreeVar(name: String): Boolean = this.func.hasFreeVar(name) || this.arg.hasFreeVar(name)
 }
 
@@ -41,6 +48,8 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
     "fun " + this.paramName +
     ": " + this.paramType.toString +
     ". " + this.body.toString
+
+  def getInfo(): I = this.info
 
   def hasFreeVar(name: String): Boolean =
     if (this.paramName == name)
@@ -62,6 +71,8 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
     else "forall " + this.paramName +
       ": " + this.paramType.toString +
       ". " + this.body.toString
+
+  def getInfo(): I = this.info
 
   def hasFreeVar(name: String): Boolean =
     if (this.paramName == name)
