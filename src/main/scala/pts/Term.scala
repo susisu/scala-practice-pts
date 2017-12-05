@@ -4,7 +4,7 @@ import scala.collection.immutable.Set
 
 sealed abstract class Term[I] {
   def hasFreeVar(name: String): Boolean
-  def getFreeVars(): Set[String]
+  def freeVars(): Set[String]
 }
 
 // variable
@@ -13,7 +13,7 @@ case class TmVar[I](info: I, name: String) extends Term[I] {
 
   def hasFreeVar(name: String): Boolean = this.name == name
 
-  def getFreeVars(): Set[String] = Set(this.name)
+  def freeVars(): Set[String] = Set(this.name)
 }
 
 // constant
@@ -22,7 +22,7 @@ case class TmConst[I](info: I, name: String) extends Term[I] {
 
   def hasFreeVar(name: String): Boolean = false
 
-  def getFreeVars(): Set[String] = Set.empty
+  def freeVars(): Set[String] = Set.empty
 }
 
 // application
@@ -41,7 +41,7 @@ case class TmApp[I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
 
   def hasFreeVar(name: String): Boolean = this.func.hasFreeVar(name) || this.arg.hasFreeVar(name)
 
-  def getFreeVars(): Set[String] = this.func.getFreeVars | this.arg.getFreeVars
+  def freeVars(): Set[String] = this.func.freeVars | this.arg.freeVars
 }
 
 // abstraction
@@ -57,7 +57,7 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
     else
       this.paramType.hasFreeVar(name) || this.body.hasFreeVar(name)
 
-  def getFreeVars(): Set[String] = this.paramType.getFreeVars | (this.body.getFreeVars - this.paramName)
+  def freeVars(): Set[String] = this.paramType.freeVars | (this.body.freeVars - this.paramName)
 }
 
 // product
@@ -80,5 +80,5 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
     else
       this.paramType.hasFreeVar(name) || this.body.hasFreeVar(name)
 
-  def getFreeVars(): Set[String] = this.paramType.getFreeVars | (this.body.getFreeVars - this.paramName)
+  def freeVars(): Set[String] = this.paramType.freeVars | (this.body.freeVars - this.paramName)
 }
