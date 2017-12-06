@@ -6,5 +6,6 @@ lazy val root = (project in file(".")).
       version := "0.1.0-SNAPSHOT"
     )),
     name := "PTS",
-    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint")
+    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint"),
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test
   )
