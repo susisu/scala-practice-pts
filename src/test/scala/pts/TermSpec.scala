@@ -283,6 +283,26 @@ class TermSpec extends FunSpec with Matchers {
           term.toString should be ("(forall T: *. T) -> U")
         }
         {
+          val term = new TmProd(Unit, "_",
+            TmVar(Unit, "T"),
+            TmAbs(Unit, "U",
+              TmConst(Unit, "*"),
+              TmVar(Unit, "U")
+            )
+          )
+          term.toString should be ("T -> fun U: *. U")
+        }
+        {
+          val term = new TmProd(Unit, "_",
+            TmVar(Unit, "T"),
+            TmProd(Unit, "U",
+              TmConst(Unit, "*"),
+              TmVar(Unit, "U")
+            )
+          )
+          term.toString should be ("T -> forall U: *. U")
+        }
+        {
           val term = new TmProd(Unit, "T",
             TmConst(Unit, "*"),
             TmVar(Unit, "T")
