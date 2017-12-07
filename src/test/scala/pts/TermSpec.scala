@@ -5,25 +5,17 @@ import org.scalatest._
 
 class TermSpec extends FunSpec with Matchers {
   describe("TmVar[I]") {
+    describe("#freeVars: Set[String]") {
+      it("should be a singleton set which contains its name") {
+        val term = TmVar(Unit, "x")
+        term.freeVars should equal (Set("x"))
+      }
+    }
+
     describe("#toString(): String") {
       it("should return its name") {
         val term = TmVar(Unit, "x")
         term.toString should be ("x")
-      }
-    }
-
-    describe("#hasFreeVar(name: String): Boolean") {
-      it("should return true if its name is the same as the argument") {
-        val term = TmVar(Unit, "x")
-        term.hasFreeVar("x") should be (true)
-        term.hasFreeVar("y") should be (false)
-      }
-    }
-
-    describe("#freeVars(): Set[String]") {
-      it("should return a singleton set which contains its name") {
-        val term = TmVar(Unit, "x")
-        term.freeVars should equal (Set("x"))
       }
     }
 
@@ -37,25 +29,17 @@ class TermSpec extends FunSpec with Matchers {
   }
 
   describe("TmConst[I]") {
+    describe("#freeVars: Set[String]") {
+      it("should be an empty set") {
+        val term = TmConst(Unit, "*")
+        term.freeVars should equal (Set.empty)
+      }
+    }
+
     describe("#toString(): String") {
       it("should return its name") {
         val term = TmConst(Unit, "*")
         term.toString should be ("*")
-      }
-    }
-
-    describe("#hasFreeVar(name: String): Boolean") {
-      it("should always return false") {
-        val term = TmConst(Unit, "*")
-        term.hasFreeVar("x") should be (false)
-        term.hasFreeVar("*") should be (false)
-      }
-    }
-
-    describe("#freeVars(): Set[String]") {
-      it("should always return an empty set") {
-        val term = TmConst(Unit, "*")
-        term.freeVars should equal (Set.empty)
       }
     }
 
@@ -69,6 +53,16 @@ class TermSpec extends FunSpec with Matchers {
   }
 
   describe("TmApp[I]") {
+    describe("#freeVars: Set[String]") {
+      it("should be an union set of the free variables of its function and argument") {
+        val term = TmApp(Unit,
+          TmVar(Unit, "f"),
+          TmVar(Unit, "x")
+        )
+        term.freeVars should equal (Set("f", "x"))
+      }
+    }
+
     describe("#toString(): String") {
       it("should return a string representation of the application") {
         {
@@ -155,37 +149,6 @@ class TermSpec extends FunSpec with Matchers {
       }
     }
 
-    describe("#hasFreeVar(name: String): Boolean") {
-      it("should return true if either its function or argument has the specified variable as free") {
-        {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmVar(Unit, "x")
-          )
-          term.hasFreeVar("f") should be (true)
-          term.hasFreeVar("x") should be (true)
-          term.hasFreeVar("y") should be (false)
-        }
-        {
-          val term = TmApp(Unit,
-            TmVar(Unit, "x"),
-            TmVar(Unit, "x")
-          )
-          term.hasFreeVar("x") should be (true)
-        }
-      }
-    }
-
-    describe("#freeVars(): Set[String]") {
-      it("should return an union set of the free variables of its function and argument") {
-        val term = TmApp(Unit,
-          TmVar(Unit, "f"),
-          TmVar(Unit, "x")
-        )
-        term.freeVars should equal (Set("f", "x"))
-      }
-    }
-
     describe("#renameFreeVar(oldName: String, newName: String): TmApp[I]") {
       it("should rename free variables in the function and the argument") {
         {
@@ -229,45 +192,8 @@ class TermSpec extends FunSpec with Matchers {
   }
 
   describe("TmAbs[I]") {
-    describe("#toString(): String") {
-      it("should return a string representation of the abstraction") {
-        val term = new TmAbs(Unit, "x",
-          TmVar(Unit, "T"),
-          TmVar(Unit, "x")
-        )
-        term.toString should be ("fun x: T. x")
-      }
-    }
-
-    describe("#hasFreeVar(name: String): Boolean") {
-      it("should return true if it has the specified variable as free") {
-        {
-          val term = new TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
-            )
-          )
-          term.hasFreeVar("x") should be (false)
-          term.hasFreeVar("T") should be (true)
-          term.hasFreeVar("f") should be (true)
-        }
-        {
-          val term = new TmAbs(Unit, "x",
-            TmVar(Unit, "x"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
-            )
-          )
-          term.hasFreeVar("x") should be (true)
-        }
-      }
-    }
-
-    describe("#freeVars(): Set[String]") {
-      it("should return a set of its free variables") {
+    describe("#freeVars: Set[String]") {
+      it("should be a set of its free variables") {
         {
           val term = new TmAbs(Unit, "x",
             TmVar(Unit, "T"),
@@ -288,6 +214,16 @@ class TermSpec extends FunSpec with Matchers {
           )
           term.freeVars should equal (Set("x", "f"))
         }
+      }
+    }
+
+    describe("#toString(): String") {
+      it("should return a string representation of the abstraction") {
+        val term = new TmAbs(Unit, "x",
+          TmVar(Unit, "T"),
+          TmVar(Unit, "x")
+        )
+        term.toString should be ("fun x: T. x")
       }
     }
 
@@ -341,6 +277,31 @@ class TermSpec extends FunSpec with Matchers {
   }
 
   describe("TmProd[I]") {
+    describe("#freeVars: Set[String]") {
+      it("should be a set of its free variables") {
+        {
+          val term = new TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.freeVars should equal (Set("T", "f"))
+        }
+        {
+          val term = new TmProd(Unit, "x",
+            TmVar(Unit, "x"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.freeVars should equal (Set("x", "f"))
+        }
+      }
+    }
+
     describe("#toString(): String") {
       it("should return a string representation of the product") {
         {
@@ -413,58 +374,6 @@ class TermSpec extends FunSpec with Matchers {
             TmVar(Unit, "T")
           )
           term.toString should be ("forall T: *. T")
-        }
-      }
-    }
-
-    describe("#hasFreeVar(name: String): Boolean") {
-      it("should return true if it has the specified variable as free") {
-        {
-          val term = new TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
-            )
-          )
-          term.hasFreeVar("x") should be (false)
-          term.hasFreeVar("T") should be (true)
-          term.hasFreeVar("f") should be (true)
-        }
-        {
-          val term = new TmProd(Unit, "x",
-            TmVar(Unit, "x"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
-            )
-          )
-          term.hasFreeVar("x") should be (true)
-        }
-      }
-    }
-
-    describe("#freeVars(): Set[String]") {
-      it("should return a set of its free variables") {
-        {
-          val term = new TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
-            )
-          )
-          term.freeVars should equal (Set("T", "f"))
-        }
-        {
-          val term = new TmProd(Unit, "x",
-            TmVar(Unit, "x"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
-            )
-          )
-          term.freeVars should equal (Set("x", "f"))
         }
       }
     }
