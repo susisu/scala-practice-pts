@@ -26,6 +26,14 @@ class TermSpec extends FunSpec with Matchers {
         term.freeVars should equal (Set("x"))
       }
     }
+
+    describe("#renameFreeVar(oldName: String, newName: String): TmVar[I]") {
+      it("should rename its name if it is the same as the specified old name") {
+        val term = TmVar(Unit, "x")
+        term.renameFreeVar("x", "z") should equal (TmVar(Unit, "z"))
+        term.renameFreeVar("y", "z") should equal (TmVar(Unit, "x"))
+      }
+    }
   }
 
   describe("TmConst[I]") {
@@ -48,6 +56,14 @@ class TermSpec extends FunSpec with Matchers {
       it("should always return an empty set") {
         val term = TmConst(Unit, "*")
         term.freeVars should equal (Set.empty)
+      }
+    }
+
+    describe("#renameFreeVar(oldName: String, newName: String): TmConst[I]") {
+      it("should always return itself") {
+        val term = TmConst(Unit, "*")
+        term.renameFreeVar("x", "z") should equal (TmConst(Unit, "*"))
+        term.renameFreeVar("*", "#") should equal (TmConst(Unit, "*"))
       }
     }
   }
@@ -169,6 +185,47 @@ class TermSpec extends FunSpec with Matchers {
         term.freeVars should equal (Set("f", "x"))
       }
     }
+
+    describe("#renameFreeVar(oldName: String, newName: String): TmApp[I]") {
+      it("should rename free variables in the function and the argument") {
+        {
+          val term = TmApp(Unit,
+            TmVar(Unit, "f"),
+            TmVar(Unit, "x")
+          )
+          term.renameFreeVar("f", "g") should equal (
+            TmApp(Unit,
+              TmVar(Unit, "g"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.renameFreeVar("x", "z") should equal (
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "z")
+            )
+          )
+          term.renameFreeVar("y", "z") should equal (
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmVar(Unit, "x"),
+            TmVar(Unit, "x")
+          )
+          term.renameFreeVar("x", "z") should equal (
+            TmApp(Unit,
+              TmVar(Unit, "z"),
+              TmVar(Unit, "z")
+            )
+          )
+        }
+      }
+    }
   }
 
   describe("TmAbs[I]") {
@@ -231,6 +288,54 @@ class TermSpec extends FunSpec with Matchers {
           )
           term.freeVars should equal (Set("x", "f"))
         }
+      }
+    }
+
+    describe("#renameFreeVar(oldName: String, newName: String): TmAbs[I]") {
+      it("should rename free variables in the parameter type and the body") {
+        val term = new TmAbs(Unit, "x",
+          TmVar(Unit, "T"),
+          TmApp(Unit,
+            TmVar(Unit, "f"),
+            TmVar(Unit, "x")
+          )
+        )
+        term.renameFreeVar("T", "U") should equal (
+          new TmAbs(Unit, "x",
+            TmVar(Unit, "U"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
+        term.renameFreeVar("f", "g") should equal (
+          new TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "g"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
+        term.renameFreeVar("x", "y") should equal (
+          new TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
+        term.renameFreeVar("y", "z") should equal (
+          new TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
       }
     }
   }
@@ -361,6 +466,54 @@ class TermSpec extends FunSpec with Matchers {
           )
           term.freeVars should equal (Set("x", "f"))
         }
+      }
+    }
+
+    describe("#renameFreeVar(oldName: String, newName: String): TmProd[I]") {
+      it("should rename free variables in the parameter type and the body") {
+        val term = new TmProd(Unit, "x",
+          TmVar(Unit, "T"),
+          TmApp(Unit,
+            TmVar(Unit, "f"),
+            TmVar(Unit, "x")
+          )
+        )
+        term.renameFreeVar("T", "U") should equal (
+          new TmProd(Unit, "x",
+            TmVar(Unit, "U"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
+        term.renameFreeVar("f", "g") should equal (
+          new TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "g"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
+        term.renameFreeVar("x", "y") should equal (
+          new TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
+        term.renameFreeVar("y", "z") should equal (
+          new TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        )
       }
     }
   }
