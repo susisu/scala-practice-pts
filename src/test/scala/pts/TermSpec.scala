@@ -26,6 +26,18 @@ class TermSpec extends FunSpec with Matchers {
         term.renameFreeVar("y", "z") should equal (TmVar(Unit, "x"))
       }
     }
+
+    describe("#alphaEquals(term: Term[I]): Boolean") {
+      it("should return true if the given term is a variable of the same name") {
+        val term = TmVar(Unit, "x")
+        term.alphaEquals(TmVar(Unit, "x")) should be (true)
+        term.alphaEquals(TmVar(Unit, "y")) should be (false)
+        term.alphaEquals(TmConst(Unit, "x")) should be (false)
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+      }
+    }
   }
 
   describe("TmConst[I]") {
@@ -48,6 +60,18 @@ class TermSpec extends FunSpec with Matchers {
         val term = TmConst(Unit, "*")
         term.renameFreeVar("x", "z") should equal (TmConst(Unit, "*"))
         term.renameFreeVar("*", "#") should equal (TmConst(Unit, "*"))
+      }
+    }
+
+    describe("#alphaEquals(term: Term[I]): Boolean") {
+      it("should return true if the given term is a constant of the same name") {
+        val term = TmConst(Unit, "*")
+        term.alphaEquals(TmConst(Unit, "*")) should be (true)
+        term.alphaEquals(TmConst(Unit, "#")) should be (false)
+        term.alphaEquals(TmVar(Unit, "*")) should be (false)
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
       }
     }
   }
@@ -189,6 +213,19 @@ class TermSpec extends FunSpec with Matchers {
         }
       }
     }
+
+    describe("#alphaEquals(term: Term[I]): Boolean") {
+      it("should return true if the given term is an application of the equal function and argument") {
+        val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (true)
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))) should be (false)
+        term.alphaEquals(TmVar(Unit, "x")) should be (false)
+        term.alphaEquals(TmConst(Unit, "*")) should be (false)
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+      }
+    }
   }
 
   describe("TmAbs[I]") {
@@ -272,6 +309,20 @@ class TermSpec extends FunSpec with Matchers {
             )
           )
         )
+      }
+    }
+
+    describe("#alphaEquals(term: Term[I]): Boolean") {
+      it("should return true if the given term is an abstraction with the equal parameter type and body") {
+        val term = TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (true)
+        term.alphaEquals(TmAbs(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "z"))) should be (true)
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "U"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "y"))) should be (false)
+        term.alphaEquals(TmVar(Unit, "x")) should be (false)
+        term.alphaEquals(TmConst(Unit, "*")) should be (false)
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
       }
     }
   }
@@ -423,6 +474,20 @@ class TermSpec extends FunSpec with Matchers {
             )
           )
         )
+      }
+    }
+
+    describe("#alphaEquals(term: Term[I]): Boolean") {
+      it("should return true if the given term is a product with the equal parameter type and body") {
+        val term = TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (true)
+        term.alphaEquals(TmProd(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "z"))) should be (true)
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "U"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "y"))) should be (false)
+        term.alphaEquals(TmVar(Unit, "x")) should be (false)
+        term.alphaEquals(TmConst(Unit, "*")) should be (false)
+        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
+        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
       }
     }
   }

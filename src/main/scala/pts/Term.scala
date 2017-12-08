@@ -5,6 +5,7 @@ import scala.collection.immutable.Set
 sealed abstract class Term[I] {
   val freeVars: Set[String]
   def renameFreeVar(oldName: String, newName: String): Term[I]
+  def alphaEquals(term: Term[I]): Boolean
 }
 
 // variable
@@ -18,6 +19,11 @@ case class TmVar[I](info: I, name: String) extends Term[I] {
       TmVar(this.info, newName)
     else
       this
+
+  def alphaEquals(term: Term[I]): Boolean = term match {
+    case TmVar(_, name) => this.name == name
+    case _ => false
+  }
 }
 
 // constant
@@ -27,6 +33,11 @@ case class TmConst[I](info: I, name: String) extends Term[I] {
   override def toString(): String = this.name
 
   def renameFreeVar(oldName: String, newName: String): TmConst[I] = this
+
+  def alphaEquals(term: Term[I]): Boolean = term match {
+    case TmConst(_, name) => this.name == name
+    case _ => false
+  }
 }
 
 // application
@@ -50,6 +61,11 @@ case class TmApp[I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
     val newArg = this.arg.renameFreeVar(oldName, newName)
     TmApp(this.info, newFunc, newArg)
   }
+
+  def alphaEquals(term: Term[I]): Boolean = term match {
+    case TmApp(_, func, arg) => this.func.alphaEquals(func) && this.arg.alphaEquals(arg)
+    case _ => false
+  }
 }
 
 // abstraction
@@ -69,6 +85,22 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
       else
         this.body.renameFreeVar(oldName, newName)
     TmAbs(this.info, this.paramName, newParamType, newBody)
+  }
+
+  def alphaEquals(term: Term[I]): Boolean = term match {
+    case TmAbs(_, paramName, paramType, body) => {
+      if (this.paramType.alphaEquals(paramType)) {
+        val newParamName = Util.getFreshVarName(
+          "_",
+          (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
+        )
+        this.body.renameFreeVar(this.paramName, newParamName)
+          .alphaEquals(body.renameFreeVar(paramName, newParamName))
+      }
+      else
+        false
+    }
+    case _ => false
   }
 }
 
@@ -96,5 +128,21 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
       else
         this.body.renameFreeVar(oldName, newName)
     TmProd(this.info, this.paramName, newParamType, newBody)
+  }
+
+  def alphaEquals(term: Term[I]): Boolean = term match {
+    case TmProd(_, paramName, paramType, body) => {
+      if (this.paramType.alphaEquals(paramType)) {
+        val newParamName = Util.getFreshVarName(
+          "_",
+          (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
+        )
+        this.body.renameFreeVar(this.paramName, newParamName)
+          .alphaEquals(body.renameFreeVar(paramName, newParamName))
+      }
+      else
+        false
+    }
+    case _ => false
   }
 }
