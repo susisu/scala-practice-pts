@@ -38,6 +38,14 @@ class TermSpec extends FunSpec with Matchers {
         term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
       }
     }
+
+    describe("substitute(name: String, term: Term[I]): Term[I]") {
+      it("should return the given term if and only if the given name is the same as the variable name") {
+        val term = TmVar(Unit, "x")
+        term.substitute("x", TmVar(Unit, "y")) should equal (TmVar(Unit, "y"))
+        term.substitute("y", TmVar(Unit, "z")) should equal (TmVar(Unit, "x"))
+      }
+    }
   }
 
   describe("TmConst[I]") {
@@ -72,6 +80,14 @@ class TermSpec extends FunSpec with Matchers {
         term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
         term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
         term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+      }
+    }
+
+    describe("substitute(name: String, term: Term[I]): Term[I]") {
+      it("should always return itself") {
+        val term = TmConst(Unit, "*")
+        term.substitute("x", TmVar(Unit, "y")) should equal (TmConst(Unit, "*"))
+        term.substitute("*", TmVar(Unit, "x")) should equal (TmConst(Unit, "*"))
       }
     }
   }
@@ -226,6 +242,47 @@ class TermSpec extends FunSpec with Matchers {
         term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
       }
     }
+
+    describe("substitute(name: String, term: Term[I]): Term[I]") {
+      it("should return an application with variables in its function and argument substited") {
+        {
+          val term = TmApp(Unit,
+            TmVar(Unit, "f"),
+            TmVar(Unit, "x")
+          )
+          term.substitute("f", TmVar(Unit, "g")) should equal (
+            TmApp(Unit,
+              TmVar(Unit, "g"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.substitute("x", TmVar(Unit, "y")) should equal (
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "y")
+            )
+          )
+          term.substitute("y", TmVar(Unit, "z")) should equal (
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmVar(Unit, "x"),
+            TmVar(Unit, "x")
+          )
+          term.substitute("x", TmVar(Unit, "y")) should equal (
+            TmApp(Unit,
+              TmVar(Unit, "y"),
+              TmVar(Unit, "y")
+            )
+          )
+        }
+      }
+    }
   }
 
   describe("TmAbs[I]") {
@@ -323,6 +380,56 @@ class TermSpec extends FunSpec with Matchers {
         term.alphaEquals(TmConst(Unit, "*")) should be (false)
         term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
         term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+      }
+    }
+
+    describe("substitute(name: String, term: Term[I]): Term[I]") {
+      it("should return an abstraction with variables in its parameter type and body substited") {
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          term.substitute("T", TmVar(Unit, "U")) should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "U"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.substitute("x", TmVar(Unit, "y")) should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.substitute("f", TmVar(Unit, "g")) should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmApp(Unit,
+                TmVar(Unit, "g"),
+                TmVar(Unit, "x")
+              )
+            )
+          )
+          term.substitute("f", TmVar(Unit, "x")) should equal (
+            TmAbs(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmApp(Unit,
+                TmVar(Unit, "x"),
+                TmVar(Unit, "_0")
+              )
+            )
+          )
+        }
       }
     }
   }
@@ -488,6 +595,56 @@ class TermSpec extends FunSpec with Matchers {
         term.alphaEquals(TmConst(Unit, "*")) should be (false)
         term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
         term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+      }
+    }
+
+    describe("substitute(name: String, term: Term[I]): Term[I]") {
+      it("should return a product with variables in its parameter type and body substited") {
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          term.substitute("T", TmVar(Unit, "U")) should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "U"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.substitute("x", TmVar(Unit, "y")) should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmApp(Unit,
+              TmVar(Unit, "f"),
+              TmVar(Unit, "x")
+            )
+          )
+          term.substitute("f", TmVar(Unit, "g")) should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "T"),
+              TmApp(Unit,
+                TmVar(Unit, "g"),
+                TmVar(Unit, "x")
+              )
+            )
+          )
+          term.substitute("f", TmVar(Unit, "x")) should equal (
+            TmProd(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmApp(Unit,
+                TmVar(Unit, "x"),
+                TmVar(Unit, "_0")
+              )
+            )
+          )
+        }
       }
     }
   }
