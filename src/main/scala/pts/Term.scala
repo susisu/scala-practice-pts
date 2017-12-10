@@ -1,6 +1,6 @@
 package pts
 
-import scala.collection.immutable.Set
+import scala.collection.immutable._
 
 sealed abstract class Term[I] {
   val freeVars: Set[String]
@@ -190,5 +190,54 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
     }
     else
       TmProd(this.info, this.paramName, newParamType, this.body)
+  }
+}
+
+object Term {
+  type Env[I] = Map[String, (Term[I], Option[Term[I]])]
+
+  def normalize[I](env: Env[I], term: Term[I]): Term[I] = term match {
+    case TmVar(_, name) =>
+      env.get(name) match {
+        case Some((_, Some(_term))) => Term.normalize(env, _term)
+        case _ => term
+      }
+    case TmConst(_, _) => term
+    case TmApp(info, func, arg) => {
+      val _func = Term.normalize(env, func)
+      val _arg = Term.normalize(env, arg)
+      _func match {
+        case TmAbs(_, paramName, _, body) => Term.normalize(env, body.substitute(paramName, _arg))
+        case _ => TmApp(info, _func, _arg)
+      }
+    }
+    case TmAbs(info, paramName, paramType, body) => {
+      val _paramType = Term.normalize(env, paramType)
+      if (env.contains(paramName)) {
+        val _paramName = Util.getFreshVarName("_", env.keySet)
+        val _env = env + (_paramName -> (_paramType -> None))
+        val _body = Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
+        TmAbs(info, _paramName, _paramType, _body)
+      }
+      else {
+        val _env = env + (paramName -> (_paramType -> None))
+        val _body = Term.normalize(_env, body)
+        TmAbs(info, paramName, _paramType, _body)
+      }
+    }
+    case TmProd(info, paramName, paramType, body) => {
+      val _paramType = Term.normalize(env, paramType)
+      if (env.contains(paramName)) {
+        val _paramName = Util.getFreshVarName("_", env.keySet)
+        val _env = env + (_paramName -> (_paramType -> None))
+        val _body = Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
+        TmProd(info, _paramName, _paramType, _body)
+      }
+      else {
+        val _env = env + (paramName -> (_paramType -> None))
+        val _body = Term.normalize(_env, body)
+        TmProd(info, paramName, _paramType, _body)
+      }
+    }
   }
 }

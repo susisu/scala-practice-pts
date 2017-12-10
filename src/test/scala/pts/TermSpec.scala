@@ -1,6 +1,6 @@
 package pts
 
-import scala.collection.immutable.Set
+import scala.collection.immutable._
 import org.scalatest._
 
 class TermSpec extends FunSpec with Matchers {
@@ -644,6 +644,240 @@ class TermSpec extends FunSpec with Matchers {
               )
             )
           )
+        }
+      }
+    }
+  }
+
+  describe("Term") {
+    describe(".normalize[I](env: Env[I], term: Term[I]): Term[I]") {
+      it("should perform the full beta reduction on a term and return its normal form") {
+        val env = Map(
+          "s" -> (TmConst(Unit, "#") -> Some(TmConst(Unit, "*"))),
+          "t" -> (TmConst(Unit, "#") -> Some(TmVar(Unit, "s"))),
+          "u" -> (TmConst(Unit, "#") -> None),
+          "v" -> (TmConst(Unit, "#") -> Some(TmVar(Unit, "u")))
+        );
+        {
+          val term = TmVar(Unit, "x")
+          Term.normalize(env, term) should equal (TmVar(Unit, "x"))
+        }
+        {
+          val term = TmVar(Unit, "s")
+          Term.normalize(env, term) should equal (TmConst(Unit, "*"))
+        }
+        {
+          val term = TmVar(Unit, "t")
+          Term.normalize(env, term) should equal (TmConst(Unit, "*"))
+        }
+        {
+          val term = TmConst(Unit, "#")
+          Term.normalize(env, term) should equal (TmConst(Unit, "#"))
+        }
+        {
+          val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          Term.normalize(env, term) should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "t"))
+          Term.normalize(env, term) should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmConst(Unit, "*"))
+          )
+        }
+        {
+          val term = TmApp(Unit, TmVar(Unit, "t"), TmVar(Unit, "x"))
+          Term.normalize(env, term) should equal (
+            TmApp(Unit, TmConst(Unit, "*"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
+            TmVar(Unit, "y")
+          )
+          Term.normalize(env, term) should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmAbs(Unit, "s",
+              TmVar(Unit, "T"),
+              TmApp(Unit, TmVar(Unit, "t"), TmVar(Unit, "s"))
+            ),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal (
+            TmApp(Unit, TmConst(Unit, "*"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "t"),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal (
+            TmAbs(Unit, "x",
+              TmConst(Unit, "*"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "t")
+          )
+          Term.normalize(env, term) should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmConst(Unit, "*")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "t")
+          )
+          Term.normalize(env, term) should equal (
+            TmAbs(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "_0")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "u",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "v")
+          )
+          Term.normalize(env, term) should equal (
+            TmAbs(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "u")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "t"),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal (
+            TmProd(Unit, "x",
+              TmConst(Unit, "*"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "t")
+          )
+          Term.normalize(env, term) should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "T"),
+              TmConst(Unit, "*")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "t")
+          )
+          Term.normalize(env, term) should equal (
+            TmProd(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "_0")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "u",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "v")
+          )
+          Term.normalize(env, term) should equal (
+            TmProd(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "u")
+            )
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmApp(Unit,
+              TmApp(Unit,
+                TmAbs(Unit, "x",
+                  TmVar(Unit, "X"),
+                  TmAbs(Unit, "y",
+                    TmVar(Unit, "Y"),
+                    TmAbs(Unit, "z",
+                      TmVar(Unit, "Z"),
+                      TmApp(Unit,
+                        TmApp(Unit, TmVar(Unit, "x"), TmVar(Unit, "z")),
+                        TmApp(Unit, TmVar(Unit, "y"), TmVar(Unit, "z"))
+                      )
+                    )
+                  )
+                ),
+                TmAbs(Unit, "x",
+                  TmVar(Unit, "X"),
+                  TmAbs(Unit, "y",
+                    TmVar(Unit, "Y"),
+                    TmVar(Unit, "x")
+                  )
+                )
+              ),
+              TmAbs(Unit, "x",
+                TmVar(Unit, "X"),
+                TmAbs(Unit, "y",
+                  TmVar(Unit, "Y"),
+                  TmVar(Unit, "x")
+                )
+              )
+            ),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term) should equal(TmVar(Unit, "x"))
         }
       }
     }
