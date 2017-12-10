@@ -66,9 +66,9 @@ case class TmApp[I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
   }
 
   def renameFreeVar(oldName: String, newName: String): TmApp[I] = {
-    val newFunc = this.func.renameFreeVar(oldName, newName)
-    val newArg = this.arg.renameFreeVar(oldName, newName)
-    TmApp(this.info, newFunc, newArg)
+    val _func = this.func.renameFreeVar(oldName, newName)
+    val _arg = this.arg.renameFreeVar(oldName, newName)
+    TmApp(this.info, _func, _arg)
   }
 
   def alphaEquals(term: Term[I]): Boolean = term match {
@@ -90,22 +90,22 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
     ". " + this.body.toString
 
   def renameFreeVar(oldName: String, newName: String): TmAbs[I] = {
-    val newParamType = this.paramType.renameFreeVar(oldName, newName)
-    val newBody =
+    val _paramType = this.paramType.renameFreeVar(oldName, newName)
+    val _body =
       if (this.paramName == oldName)
         this.body
       else
         this.body.renameFreeVar(oldName, newName)
-    TmAbs(this.info, this.paramName, newParamType, newBody)
+    TmAbs(this.info, this.paramName, _paramType, _body)
   }
 
   def alphaEquals(term: Term[I]): Boolean = term match {
     case TmAbs(_, paramName, paramType, body) => {
       if (this.paramType.alphaEquals(paramType)) {
         val usedNames = (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
-        val newParamName = Util.getFreshVarName("_", usedNames)
-        this.body.renameFreeVar(this.paramName, newParamName)
-          .alphaEquals(body.renameFreeVar(paramName, newParamName))
+        val _paramName = Util.getFreshVarName("_", usedNames)
+        this.body.renameFreeVar(this.paramName, _paramName)
+          .alphaEquals(body.renameFreeVar(paramName, _paramName))
       }
       else
         false
@@ -114,22 +114,22 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
   }
 
   def substitute(name: String, term: Term[I]): Term[I] = {
-    val newParamType = this.paramType.substitute(name, term)
+    val _paramType = this.paramType.substitute(name, term)
     // if substituion will occur in the body
     if (this.paramName != name && this.body.freeVars.contains(name)) {
       // if alpha-conversion is needed
       if (term.freeVars.contains(this.paramName)) {
         val usedNames = term.freeVars | this.body.freeVars
-        val newParamName = Util.getFreshVarName("_", usedNames)
-        val newBody = this.body.renameFreeVar(this.paramName, newParamName)
+        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _body = this.body.renameFreeVar(this.paramName, _paramName)
           .substitute(name, term)
-        TmAbs(this.info, newParamName, newParamType, newBody)
+        TmAbs(this.info, _paramName, _paramType, _body)
       }
       else
-        TmAbs(this.info, this.paramName, newParamType, this.body.substitute(name, term))
+        TmAbs(this.info, this.paramName, _paramType, this.body.substitute(name, term))
     }
     else
-      TmAbs(this.info, this.paramName, newParamType, this.body)
+      TmAbs(this.info, this.paramName, _paramType, this.body)
   }
 }
 
@@ -150,22 +150,22 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
       ". " + this.body.toString
 
   def renameFreeVar(oldName: String, newName: String): TmProd[I] = {
-    val newParamType = this.paramType.renameFreeVar(oldName, newName)
-    val newBody =
+    val _paramType = this.paramType.renameFreeVar(oldName, newName)
+    val _body =
       if (this.paramName == oldName)
         this.body
       else
         this.body.renameFreeVar(oldName, newName)
-    TmProd(this.info, this.paramName, newParamType, newBody)
+    TmProd(this.info, this.paramName, _paramType, _body)
   }
 
   def alphaEquals(term: Term[I]): Boolean = term match {
     case TmProd(_, paramName, paramType, body) => {
       if (this.paramType.alphaEquals(paramType)) {
         val usedNames = (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
-        val newParamName = Util.getFreshVarName("_", usedNames)
-        this.body.renameFreeVar(this.paramName, newParamName)
-          .alphaEquals(body.renameFreeVar(paramName, newParamName))
+        val _paramName = Util.getFreshVarName("_", usedNames)
+        this.body.renameFreeVar(this.paramName, _paramName)
+          .alphaEquals(body.renameFreeVar(paramName, _paramName))
       }
       else
         false
@@ -174,22 +174,22 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
   }
 
   def substitute(name: String, term: Term[I]): Term[I] = {
-    val newParamType = this.paramType.substitute(name, term)
+    val _paramType = this.paramType.substitute(name, term)
     // if substituion will occur in the body
     if (this.paramName != name && this.body.freeVars.contains(name)) {
       // if alpha-conversion is needed
       if (term.freeVars.contains(this.paramName)) {
         val usedNames = term.freeVars | this.body.freeVars
-        val newParamName = Util.getFreshVarName("_", usedNames)
-        val newBody = this.body.renameFreeVar(this.paramName, newParamName)
+        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _body = this.body.renameFreeVar(this.paramName, _paramName)
           .substitute(name, term)
-        TmProd(this.info, newParamName, newParamType, newBody)
+        TmProd(this.info, _paramName, _paramType, _body)
       }
       else
-        TmProd(this.info, this.paramName, newParamType, this.body.substitute(name, term))
+        TmProd(this.info, this.paramName, _paramType, this.body.substitute(name, term))
     }
     else
-      TmProd(this.info, this.paramName, newParamType, this.body)
+      TmProd(this.info, this.paramName, _paramType, this.body)
   }
 }
 
@@ -207,7 +207,10 @@ object Term {
       val _func = Term.normalize(env, func)
       val _arg = Term.normalize(env, arg)
       _func match {
-        case TmAbs(_, paramName, _, body) => Term.normalize(env, body.substitute(paramName, _arg))
+        case TmAbs(_, paramName, _, body) => {
+          val _body = body.substitute(paramName, _arg)
+          Term.normalize(env, _body)
+        }
         case _ => TmApp(info, _func, _arg)
       }
     }
