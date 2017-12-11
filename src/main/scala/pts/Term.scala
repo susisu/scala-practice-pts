@@ -243,4 +243,24 @@ object Term {
       }
     }
   }
+
+  def weakNormalize[I](env: Env[I], term: Term[I]): Term[I] = term match {
+    case TmVar(_, name) =>
+      env.get(name) match {
+        case Some((_, Some(_term))) => Term.weakNormalize(env, _term)
+        case _ => term
+      }
+    case TmConst(_, _) => term
+    case TmApp(info, func, arg) => {
+      val _func = Term.weakNormalize(env, func)
+      _func match {
+        case TmAbs(_, paramName, _, body) => {
+          val _body = body.substitute(paramName, arg)
+          Term.weakNormalize(env, _body)
+        }
+        case _ => TmApp(info, _func, arg)
+      }
+    }
+    case TmAbs(_, _, _, _) | TmProd(_, _, _, _) => term
+  }
 }
