@@ -3,6 +3,7 @@ package pts
 import scala.collection.immutable._
 
 sealed abstract class Term[I] {
+  val info: I
   val freeVars: Set[String]
   def renameFreeVar(oldName: String, newName: String): Term[I]
   def alphaEquals(term: Term[I]): Boolean
