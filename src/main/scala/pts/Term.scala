@@ -2,16 +2,16 @@ package pts
 
 import scala.collection.immutable._
 
-sealed abstract class Term[I] {
+sealed abstract class Term[+I] {
   val info: I
   val freeVars: Set[String]
   def renameFreeVar(oldName: String, newName: String): Term[I]
-  def alphaEquals(term: Term[I]): Boolean
-  def substitute(name: String, term: Term[I]): Term[I]
+  def alphaEquals[J](term: Term[J]): Boolean
+  def substitute[J >: I](name: String, term: Term[J]): Term[J]
 }
 
 // variable
-case class TmVar[I](info: I, name: String) extends Term[I] {
+case class TmVar[+I](info: I, name: String) extends Term[I] {
   val freeVars: Set[String] = Set(this.name)
 
   override def toString(): String = this.name
@@ -22,12 +22,12 @@ case class TmVar[I](info: I, name: String) extends Term[I] {
     else
       this
 
-  def alphaEquals(term: Term[I]): Boolean = term match {
+  def alphaEquals[J](term: Term[J]): Boolean = term match {
     case TmVar(_, name) => this.name == name
     case _ => false
   }
 
-  def substitute(name: String, term: Term[I]): Term[I] =
+  def substitute[J >: I](name: String, term: Term[J]): Term[J] =
     if (this.name == name)
       term
     else
@@ -35,23 +35,23 @@ case class TmVar[I](info: I, name: String) extends Term[I] {
 }
 
 // constant
-case class TmConst[I](info: I, name: String) extends Term[I] {
+case class TmConst[+I](info: I, name: String) extends Term[I] {
   val freeVars: Set[String] = Set.empty
 
   override def toString(): String = this.name
 
   def renameFreeVar(oldName: String, newName: String): TmConst[I] = this
 
-  def alphaEquals(term: Term[I]): Boolean = term match {
+  def alphaEquals[J](term: Term[J]): Boolean = term match {
     case TmConst(_, name) => this.name == name
     case _ => false
   }
 
-  def substitute(name: String, term: Term[I]): Term[I] = this
+  def substitute[J >: I](name: String, term: Term[J]): Term[J] = this
 }
 
 // application
-case class TmApp[I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
+case class TmApp[+I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
   val freeVars: Set[String] = this.func.freeVars | this.arg.freeVars
 
   override def toString(): String = {
@@ -72,17 +72,17 @@ case class TmApp[I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
     TmApp(this.info, _func, _arg)
   }
 
-  def alphaEquals(term: Term[I]): Boolean = term match {
+  def alphaEquals[J](term: Term[J]): Boolean = term match {
     case TmApp(_, func, arg) => this.func.alphaEquals(func) && this.arg.alphaEquals(arg)
     case _ => false
   }
 
-  def substitute(name: String, term: Term[I]): Term[I] =
+  def substitute[J >: I](name: String, term: Term[J]): Term[J] =
     TmApp(this.info, this.func.substitute(name, term), this.arg.substitute(name, term))
 }
 
 // abstraction
-case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
+case class TmAbs[+I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
   val freeVars: Set[String] = this.paramType.freeVars | (this.body.freeVars - this.paramName)
 
   override def toString(): String =
@@ -100,7 +100,7 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
     TmAbs(this.info, this.paramName, _paramType, _body)
   }
 
-  def alphaEquals(term: Term[I]): Boolean = term match {
+  def alphaEquals[J](term: Term[J]): Boolean = term match {
     case TmAbs(_, paramName, paramType, body) => {
       if (this.paramType.alphaEquals(paramType)) {
         val usedNames = (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
@@ -114,7 +114,7 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
     case _ => false
   }
 
-  def substitute(name: String, term: Term[I]): Term[I] = {
+  def substitute[J >: I](name: String, term: Term[J]): Term[J] = {
     val _paramType = this.paramType.substitute(name, term)
     // if substituion will occur in the body
     if (this.paramName != name && this.body.freeVars.contains(name)) {
@@ -135,7 +135,7 @@ case class TmAbs[I](info: I, paramName: String, paramType: Term[I], body: Term[I
 }
 
 // product
-case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
+case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
   val freeVars: Set[String] = this.paramType.freeVars | (this.body.freeVars - this.paramName)
 
   override def toString(): String =
@@ -160,7 +160,7 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
     TmProd(this.info, this.paramName, _paramType, _body)
   }
 
-  def alphaEquals(term: Term[I]): Boolean = term match {
+  def alphaEquals[J](term: Term[J]): Boolean = term match {
     case TmProd(_, paramName, paramType, body) => {
       if (this.paramType.alphaEquals(paramType)) {
         val usedNames = (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
@@ -174,7 +174,7 @@ case class TmProd[I](info: I, paramName: String, paramType: Term[I], body: Term[
     case _ => false
   }
 
-  def substitute(name: String, term: Term[I]): Term[I] = {
+  def substitute[J >: I](name: String, term: Term[J]): Term[J] = {
     val _paramType = this.paramType.substitute(name, term)
     // if substituion will occur in the body
     if (this.paramName != name && this.body.freeVars.contains(name)) {
