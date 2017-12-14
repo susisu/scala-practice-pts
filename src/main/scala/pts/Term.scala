@@ -219,12 +219,12 @@ object Term {
       val _paramType = Term.normalize(env, paramType)
       if (env.contains(paramName)) {
         val _paramName = Util.getFreshVarName("_", env.keySet)
-        val _env = env + (_paramName -> (_paramType -> None))
+        val _env = env + (_paramName -> ((_paramType, None)))
         val _body = Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
         TmAbs(info, _paramName, _paramType, _body)
       }
       else {
-        val _env = env + (paramName -> (_paramType -> None))
+        val _env = env + (paramName -> ((_paramType, None)))
         val _body = Term.normalize(_env, body)
         TmAbs(info, paramName, _paramType, _body)
       }
@@ -233,12 +233,12 @@ object Term {
       val _paramType = Term.normalize(env, paramType)
       if (env.contains(paramName)) {
         val _paramName = Util.getFreshVarName("_", env.keySet)
-        val _env = env + (_paramName -> (_paramType -> None))
+        val _env = env + (_paramName -> ((_paramType, None)))
         val _body = Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
         TmProd(info, _paramName, _paramType, _body)
       }
       else {
-        val _env = env + (paramName -> (_paramType -> None))
+        val _env = env + (paramName -> ((_paramType, None)))
         val _body = Term.normalize(_env, body)
         TmProd(info, paramName, _paramType, _body)
       }
