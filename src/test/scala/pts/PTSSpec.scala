@@ -68,32 +68,40 @@ class PTSSpec extends FunSpec with Matchers {
         );
         {
           val term = TmVar(Some(Unit), "t")
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmVar(Some(Unit), "T")
           ) should be (true)
         }
         {
           val term = TmVar(Some(Unit), "x")
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("not declared")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("not declared")
         }
         {
           val term = TmConst(Some(Unit), "*")
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmConst(Some(Unit), "#")
           ) should be (true)
         }
         {
           val term = TmConst(Some(Unit), "#")
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("no axiom")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("no axiom")
         }
         {
           val term = TmApp(Some(Unit),
             TmVar(Some(Unit), "f"),
             TmVar(Some(Unit), "t")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmVar(Some(Unit), "U")
           ) should be (true)
         }
@@ -108,7 +116,9 @@ class PTSSpec extends FunSpec with Matchers {
               TmVar(Some(Unit), "U")
             )
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmConst(Some(Unit), "*")
           ) should be (true)
         }
@@ -117,23 +127,27 @@ class PTSSpec extends FunSpec with Matchers {
             TmVar(Some(Unit), "t"),
             TmVar(Some(Unit), "t")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("function")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("function")
         }
         {
           val term = TmApp(Some(Unit),
             TmVar(Some(Unit), "f"),
             TmVar(Some(Unit), "u")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("argument")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("argument")
         }
         {
           val term = TmAbs(Some(Unit), "x",
             TmVar(Some(Unit), "T"),
             TmVar(Some(Unit), "x")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmProd(Some(Unit), "x",
               TmVar(Some(Unit), "T"),
               TmVar(Some(Unit), "T")
@@ -145,7 +159,9 @@ class PTSSpec extends FunSpec with Matchers {
             TmVar(Some(Unit), "T"),
             TmVar(Some(Unit), "u")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmProd(Some(Unit), "u",
               TmVar(Some(Unit), "T"),
               TmVar(Some(Unit), "T")
@@ -157,7 +173,9 @@ class PTSSpec extends FunSpec with Matchers {
             TmConst(Some(Unit), "*"),
             TmVar(Some(Unit), "T")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmProd(Some(Unit), "x",
               TmConst(Some(Unit), "*"),
               TmConst(Some(Unit), "*")
@@ -169,23 +187,27 @@ class PTSSpec extends FunSpec with Matchers {
             TmVar(Some(Unit), "T"),
             TmConst(Some(Unit), "*")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("no axiom")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("no axiom")
         }
         {
           val term = TmAbs(Some(Unit), "x",
             TmConst(Some(Unit), "*"),
             TmConst(Some(Unit), "*")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("no axiom")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("no axiom")
         }
         {
           val term = TmProd(Some(Unit), "x",
             TmVar(Some(Unit), "T"),
             TmVar(Some(Unit), "T")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmConst(Some(Unit), "*")
           ) should be (true)
         }
@@ -194,7 +216,9 @@ class PTSSpec extends FunSpec with Matchers {
             TmVar(Some(Unit), "T"),
             TmVar(Some(Unit), "T")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmConst(Some(Unit), "*")
           ) should be (true)
         }
@@ -203,7 +227,9 @@ class PTSSpec extends FunSpec with Matchers {
             TmVar(Some(Unit), "T"),
             TmConst(Some(Unit), "*")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmConst(Some(Unit), "#")
           ) should be (true)
         }
@@ -212,7 +238,9 @@ class PTSSpec extends FunSpec with Matchers {
             TmConst(Some(Unit), "*"),
             TmConst(Some(Unit), "*")
           )
-          pts.typeOf(env, term).alphaEquals(
+          val res = pts.typeOf(env, term)
+          res.isRight should be (true)
+          res.right.get.alphaEquals(
             TmConst(Some(Unit), "#")
           ) should be (true)
         }
@@ -221,24 +249,27 @@ class PTSSpec extends FunSpec with Matchers {
             TmConst(Some(Unit), "*"),
             TmVar(Some(Unit), "T")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("no rule")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("no rule")
         }
         {
           val term = TmProd(Some(Unit), "x",
             TmVar(Some(Unit), "t"),
             TmVar(Some(Unit), "T")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("not a sort")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("not a sort")
         }
         {
           val term = TmProd(Some(Unit), "x",
             TmVar(Some(Unit), "T"),
             TmVar(Some(Unit), "x")
           )
-          val thrown = the [RuntimeException] thrownBy pts.typeOf(env, term)
-          thrown.getMessage should include ("not a sort")
+          val res = pts.typeOf(env, term)
+          res.isLeft should be (true)
+          res.left.get should include ("not a sort")
         }
       }
     }
