@@ -13,18 +13,16 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
           case Some(sort) => Right(TmConst(None, sort))
           case None => PTS.typeError(info, s"no axiom for constant `$name`")
         }
-      case TmApp(info, func, arg) =>
-        for {
+      case TmApp(info, func, arg) => for {
           funcType <- this.typeOf(env, func);
-          _funcType = Term.weakNormalize(env, funcType);
+          _funcType <- Term.weakNormalize(env, funcType);
           ret <- _funcType match {
             case TmProd(_, paramName, paramType, body) =>
               for {
                 argType <- this.typeOf(env, arg);
-                _argType = Term.normalize(env, argType)
-                _paramType = Term.normalize(env, paramType)
-                ret <-
-                  if (argType.alphaEquals(_paramType))
+                _argType <- Term.normalize(env, argType);
+                _paramType <- Term.normalize(env, paramType);
+                ret <- if (argType.alphaEquals(_paramType))
                     Right(body.substitute(paramName, arg))
                   else
                     PTS.typeError(
@@ -41,10 +39,8 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
               )
           }
         } yield ret
-      case TmAbs(info, paramName, paramType, body) =>
-        for {
-          termType <-
-            if (env.contains(paramName)) {
+      case TmAbs(info, paramName, paramType, body) => for {
+          termType <- if (env.contains(paramName)) {
               val _paramName = Util.getFreshVarName("_", env.keySet)
               val _body = body.renameFreeVar(paramName, _paramName)
               val _env = env + (_paramName -> ((paramType, None)))
@@ -59,7 +55,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
               } yield TmProd(None, paramName, paramType, bodyType)
             };
           termTypeType <- this.typeOf(env, termType);
-          _termTypeType = Term.weakNormalize(env, termTypeType);
+          _termTypeType <- Term.weakNormalize(env, termTypeType);
           ret <- _termTypeType match {
             case TmConst(_, sort) =>
               if (this.sorts.contains(sort))
@@ -78,10 +74,9 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
               )
           }
         } yield ret
-      case TmProd(info, paramName, paramType, body) =>
-        for {
+      case TmProd(info, paramName, paramType, body) => for {
           paramTypeType <- this.typeOf(env, paramType);
-          _paramTypeType = Term.weakNormalize(env, paramTypeType);
+          _paramTypeType <- Term.weakNormalize(env, paramTypeType);
           ret <- _paramTypeType match {
             case TmConst(_, sort1) =>
               if (this.sorts.contains(sort1)) {
@@ -98,7 +93,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
                   }
                 for {
                   bodyType <- this.typeOf(_env, _body);
-                  _bodyType = Term.weakNormalize(_env, bodyType);
+                  _bodyType <- Term.weakNormalize(_env, bodyType);
                   ret <- _bodyType match {
                     case TmConst(_, sort2) =>
                       if (this.sorts.contains(sort2))

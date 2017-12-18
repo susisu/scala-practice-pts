@@ -197,71 +197,77 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
 object Term {
   type Env[I] = Map[String, (Term[I], Option[Term[I]])]
 
-  def normalize[I](env: Env[I], term: Term[I]): Term[I] = term match {
-    case TmVar(_, name) =>
+  def normalize[I](env: Env[I], term: Term[I]): Either[String, Term[I]] = term match {
+    case TmVar(info, name) =>
       env.get(name) match {
         case Some((_, Some(_term))) => Term.normalize(env, _term)
-        case _ => term
+        case Some((_, None)) => Right(term)
+        case None => Left(s"${info.toString}: `$name` is not declared")
       }
-    case TmConst(_, _) => term
-    case TmApp(info, func, arg) => {
-      val _func = Term.normalize(env, func)
-      val _arg = Term.normalize(env, arg)
-      _func match {
-        case TmAbs(_, paramName, _, body) => {
-          val _body = body.substitute(paramName, _arg)
-          Term.normalize(env, _body)
+    case TmConst(_, _) => Right(term)
+    case TmApp(info, func, arg) => for {
+        _func <- Term.normalize(env, func);
+        _arg <- Term.normalize(env, arg);
+        ret <- _func match {
+          case TmAbs(_, paramName, _, body) => {
+            val _body = body.substitute(paramName, _arg)
+            Term.normalize(env, _body)
+          }
+          case _ => Right(TmApp(info, _func, _arg))
         }
-        case _ => TmApp(info, _func, _arg)
-      }
-    }
-    case TmAbs(info, paramName, paramType, body) => {
-      val _paramType = Term.normalize(env, paramType)
-      if (env.contains(paramName)) {
-        val _paramName = Util.getFreshVarName("_", env.keySet)
-        val _env = env + (_paramName -> ((_paramType, None)))
-        val _body = Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
-        TmAbs(info, _paramName, _paramType, _body)
-      }
-      else {
-        val _env = env + (paramName -> ((_paramType, None)))
-        val _body = Term.normalize(_env, body)
-        TmAbs(info, paramName, _paramType, _body)
-      }
-    }
-    case TmProd(info, paramName, paramType, body) => {
-      val _paramType = Term.normalize(env, paramType)
-      if (env.contains(paramName)) {
-        val _paramName = Util.getFreshVarName("_", env.keySet)
-        val _env = env + (_paramName -> ((_paramType, None)))
-        val _body = Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
-        TmProd(info, _paramName, _paramType, _body)
-      }
-      else {
-        val _env = env + (paramName -> ((_paramType, None)))
-        val _body = Term.normalize(_env, body)
-        TmProd(info, paramName, _paramType, _body)
-      }
-    }
+      } yield ret
+    case TmAbs(info, paramName, paramType, body) => for {
+        _paramType <- Term.normalize(env, paramType);
+        ret <- if (env.contains(paramName)) {
+            val _paramName = Util.getFreshVarName("_", env.keySet)
+            val _env = env + (_paramName -> ((_paramType, None)))
+            for {
+              _body <- Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
+            } yield TmAbs(info, _paramName, _paramType, _body)
+          }
+          else {
+            val _env = env + (paramName -> ((_paramType, None)))
+            for {
+              _body <- Term.normalize(_env, body)
+            } yield TmAbs(info, paramName, _paramType, _body)
+          }
+      } yield ret
+    case TmProd(info, paramName, paramType, body) => for {
+        _paramType <- Term.normalize(env, paramType);
+        ret <- if (env.contains(paramName)) {
+            val _paramName = Util.getFreshVarName("_", env.keySet)
+            val _env = env + (_paramName -> ((_paramType, None)))
+            for {
+              _body <- Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
+            } yield TmProd(info, _paramName, _paramType, _body)
+          }
+          else {
+            val _env = env + (paramName -> ((_paramType, None)))
+            for {
+              _body <- Term.normalize(_env, body)
+            } yield TmProd(info, paramName, _paramType, _body)
+          }
+      } yield ret
   }
 
-  def weakNormalize[I](env: Env[I], term: Term[I]): Term[I] = term match {
-    case TmVar(_, name) =>
+  def weakNormalize[I](env: Env[I], term: Term[I]): Either[String, Term[I]] = term match {
+    case TmVar(info, name) =>
       env.get(name) match {
         case Some((_, Some(_term))) => Term.weakNormalize(env, _term)
-        case _ => term
+        case Some((_, None)) => Right(term)
+        case None => Left(s"${info.toString}: `$name` is not declared")
       }
-    case TmConst(_, _) => term
-    case TmApp(info, func, arg) => {
-      val _func = Term.weakNormalize(env, func)
-      _func match {
-        case TmAbs(_, paramName, _, body) => {
-          val _body = body.substitute(paramName, arg)
-          Term.weakNormalize(env, _body)
+    case TmConst(_, _) => Right(term)
+    case TmApp(info, func, arg) => for {
+        _func <- Term.weakNormalize(env, func);
+        ret <- _func match {
+          case TmAbs(_, paramName, _, body) => {
+            val _body = body.substitute(paramName, arg)
+            Term.weakNormalize(env, _body)
+          }
+          case _ => Right(TmApp(info, _func, arg))
         }
-        case _ => TmApp(info, _func, arg)
-      }
-    }
-    case TmAbs(_, _, _, _) | TmProd(_, _, _, _) => term
+      } yield ret
+    case TmAbs(_, _, _, _) | TmProd(_, _, _, _) => Right(term)
   }
 }

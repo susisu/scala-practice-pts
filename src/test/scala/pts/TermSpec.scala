@@ -653,109 +653,84 @@ class TermSpec extends FunSpec with Matchers {
     describe(".normalize[I](env: Env[I], term: Term[I]): Term[I]") {
       it("should perform the full beta reduction on a term and return its normal form") {
         val env = Map(
-          "s" -> (TmConst(Unit, "#") -> Some(TmConst(Unit, "*"))),
-          "t" -> (TmConst(Unit, "#") -> Some(TmVar(Unit, "s"))),
-          "u" -> (TmConst(Unit, "#") -> None),
-          "v" -> (TmConst(Unit, "#") -> Some(TmVar(Unit, "u")))
+          "T" -> (TmConst(Unit, "*") -> None),
+          "x" -> (TmVar(Unit, "T") -> None),
+          "y" -> (TmVar(Unit, "T") -> None),
+          "f" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> None),
+          "U" -> (TmConst(Unit, "*") -> Some(TmVar(Unit, "T"))),
+          "z" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "x"))),
+          "w" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "z"))),
+          "g" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> Some(TmVar(Unit, "f"))),
         );
         {
-          val term = TmVar(Unit, "x")
-          Term.normalize(env, term) should equal (TmVar(Unit, "x"))
-        }
-        {
-          val term = TmVar(Unit, "s")
-          Term.normalize(env, term) should equal (TmConst(Unit, "*"))
-        }
-        {
           val term = TmVar(Unit, "t")
-          Term.normalize(env, term) should equal (TmConst(Unit, "*"))
+          Term.normalize(env, term).left.get should include ("not declared")
+        }
+        {
+          val term = TmVar(Unit, "x")
+          Term.normalize(env, term).right.get should equal (TmVar(Unit, "x"))
+        }
+        {
+          val term = TmVar(Unit, "z")
+          Term.normalize(env, term).right.get should equal (TmVar(Unit, "x"))
+        }
+        {
+          val term = TmVar(Unit, "w")
+          Term.normalize(env, term).right.get should equal (TmVar(Unit, "x"))
         }
         {
           val term = TmConst(Unit, "#")
-          Term.normalize(env, term) should equal (TmConst(Unit, "#"))
+          Term.normalize(env, term).right.get should equal (TmConst(Unit, "#"))
         }
         {
           val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
-          Term.normalize(env, term) should equal (
+          Term.normalize(env, term).right.get should equal (
             TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
           )
         }
         {
-          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "t"))
-          Term.normalize(env, term) should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmConst(Unit, "*"))
+          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "z"))
+          Term.normalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
           )
         }
         {
-          val term = TmApp(Unit, TmVar(Unit, "t"), TmVar(Unit, "x"))
-          Term.normalize(env, term) should equal (
-            TmApp(Unit, TmConst(Unit, "*"), TmVar(Unit, "x"))
+          val term = TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "x"))
+          Term.normalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
           )
         }
         {
           val term = TmApp(Unit,
-            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
+            TmAbs(Unit, "t", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "t"))),
             TmVar(Unit, "y")
           )
-          Term.normalize(env, term) should equal (
+          Term.normalize(env, term).right.get should equal (
             TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
           )
         }
         {
           val term = TmApp(Unit,
-            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            ),
             TmVar(Unit, "x")
           )
-          Term.normalize(env, term) should equal (
+          Term.normalize(env, term).right.get should equal (
             TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
           )
         }
         {
           val term = TmApp(Unit,
-            TmAbs(Unit, "s",
+            TmAbs(Unit, "t",
               TmVar(Unit, "T"),
-              TmApp(Unit, TmVar(Unit, "t"), TmVar(Unit, "s"))
+              TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "t"))
             ),
             TmVar(Unit, "x")
           )
-          Term.normalize(env, term) should equal (
-            TmApp(Unit, TmConst(Unit, "*"), TmVar(Unit, "x"))
-          )
-        }
-        {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
-          )
-          Term.normalize(env, term) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "t"),
-            TmVar(Unit, "x")
-          )
-          Term.normalize(env, term) should equal (
-            TmAbs(Unit, "x",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
-          )
-          Term.normalize(env, term) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmConst(Unit, "*")
-            )
+          Term.normalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
           )
         }
         {
@@ -763,238 +738,7 @@ class TermSpec extends FunSpec with Matchers {
             TmVar(Unit, "T"),
             TmVar(Unit, "t")
           )
-          Term.normalize(env, term) should equal (
-            TmAbs(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "_0")
-            )
-          )
-        }
-        {
-          val term = TmAbs(Unit, "u",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "v")
-          )
-          Term.normalize(env, term) should equal (
-            TmAbs(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "u")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
-          )
-          Term.normalize(env, term) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "t"),
-            TmVar(Unit, "x")
-          )
-          Term.normalize(env, term) should equal (
-            TmProd(Unit, "x",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
-          )
-          Term.normalize(env, term) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmConst(Unit, "*")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
-          )
-          Term.normalize(env, term) should equal (
-            TmProd(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "_0")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "u",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "v")
-          )
-          Term.normalize(env, term) should equal (
-            TmProd(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "u")
-            )
-          )
-        }
-        {
-          val term = TmApp(Unit,
-            TmApp(Unit,
-              TmApp(Unit,
-                TmAbs(Unit, "x",
-                  TmVar(Unit, "X"),
-                  TmAbs(Unit, "y",
-                    TmVar(Unit, "Y"),
-                    TmAbs(Unit, "z",
-                      TmVar(Unit, "Z"),
-                      TmApp(Unit,
-                        TmApp(Unit, TmVar(Unit, "x"), TmVar(Unit, "z")),
-                        TmApp(Unit, TmVar(Unit, "y"), TmVar(Unit, "z"))
-                      )
-                    )
-                  )
-                ),
-                TmAbs(Unit, "x",
-                  TmVar(Unit, "X"),
-                  TmAbs(Unit, "y",
-                    TmVar(Unit, "Y"),
-                    TmVar(Unit, "x")
-                  )
-                )
-              ),
-              TmAbs(Unit, "x",
-                TmVar(Unit, "X"),
-                TmAbs(Unit, "y",
-                  TmVar(Unit, "Y"),
-                  TmVar(Unit, "x")
-                )
-              )
-            ),
-            TmVar(Unit, "x")
-          )
-          Term.normalize(env, term) should equal(TmVar(Unit, "x"))
-        }
-      }
-    }
-    describe(".weakNormalize[I](env: Env[I], term: Term[I]): Term[I]") {
-      it("should perform a reduction on a term and return its weak head normal form") {
-        val env = Map(
-          "s" -> (TmConst(Unit, "#") -> Some(TmConst(Unit, "*"))),
-          "t" -> (TmConst(Unit, "#") -> Some(TmVar(Unit, "s"))),
-          "u" -> (TmConst(Unit, "#") -> None),
-          "v" -> (TmConst(Unit, "#") -> Some(TmVar(Unit, "u")))
-        );
-        {
-          val term = TmVar(Unit, "x")
-          Term.weakNormalize(env, term) should equal (TmVar(Unit, "x"))
-        }
-        {
-          val term = TmVar(Unit, "s")
-          Term.weakNormalize(env, term) should equal (TmConst(Unit, "*"))
-        }
-        {
-          val term = TmVar(Unit, "t")
-          Term.weakNormalize(env, term) should equal (TmConst(Unit, "*"))
-        }
-        {
-          val term = TmConst(Unit, "#")
-          Term.weakNormalize(env, term) should equal (TmConst(Unit, "#"))
-        }
-        {
-          val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
-          Term.weakNormalize(env, term) should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
-          )
-        }
-        {
-          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "t"))
-          Term.weakNormalize(env, term) should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "t"))
-          )
-        }
-        {
-          val term = TmApp(Unit, TmVar(Unit, "t"), TmVar(Unit, "x"))
-          Term.weakNormalize(env, term) should equal (
-            TmApp(Unit, TmConst(Unit, "*"), TmVar(Unit, "x"))
-          )
-        }
-        {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
-            TmVar(Unit, "y")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
-          )
-        }
-        {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
-            TmVar(Unit, "x")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
-          )
-        }
-        {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "s",
-              TmVar(Unit, "T"),
-              TmApp(Unit, TmVar(Unit, "t"), TmVar(Unit, "s"))
-            ),
-            TmVar(Unit, "x")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmApp(Unit, TmConst(Unit, "*"), TmVar(Unit, "x"))
-          )
-        }
-        {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "t"),
-            TmVar(Unit, "x")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "t"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
-            )
-          )
-        }
-        {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
-          )
-          Term.weakNormalize(env, term) should equal (
+          Term.normalize(env, term).right.get should equal (
             TmAbs(Unit, "t",
               TmVar(Unit, "T"),
               TmVar(Unit, "t")
@@ -1002,50 +746,50 @@ class TermSpec extends FunSpec with Matchers {
           )
         }
         {
-          val term = TmAbs(Unit, "u",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "v")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmAbs(Unit, "u",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "v")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "t"),
-            TmVar(Unit, "x")
-          )
-          Term.weakNormalize(env, term) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "t"),
-              TmVar(Unit, "x")
-            )
-          )
-        }
-        {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
+          val term = TmAbs(Unit, "t",
+            TmVar(Unit, "U"),
             TmVar(Unit, "t")
           )
-          Term.weakNormalize(env, term) should equal (
-            TmProd(Unit, "x",
+          Term.normalize(env, term).right.get should equal (
+            TmAbs(Unit, "t",
               TmVar(Unit, "T"),
               TmVar(Unit, "t")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.normalize(env, term).right.get should equal (
+            TmAbs(Unit, "t",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term).right.get should equal (
+            TmAbs(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "_0")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.normalize(env, term).right.get should equal (
+            TmAbs(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
             )
           )
         }
@@ -1054,7 +798,7 @@ class TermSpec extends FunSpec with Matchers {
             TmVar(Unit, "T"),
             TmVar(Unit, "t")
           )
-          Term.weakNormalize(env, term) should equal (
+          Term.normalize(env, term).right.get should equal (
             TmProd(Unit, "t",
               TmVar(Unit, "T"),
               TmVar(Unit, "t")
@@ -1062,14 +806,50 @@ class TermSpec extends FunSpec with Matchers {
           )
         }
         {
-          val term = TmProd(Unit, "u",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "v")
+          val term = TmProd(Unit, "t",
+            TmVar(Unit, "U"),
+            TmVar(Unit, "t")
           )
-          Term.weakNormalize(env, term) should equal (
-            TmProd(Unit, "u",
+          Term.normalize(env, term).right.get should equal (
+            TmProd(Unit, "t",
               TmVar(Unit, "T"),
-              TmVar(Unit, "v")
+              TmVar(Unit, "t")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.normalize(env, term).right.get should equal (
+            TmProd(Unit, "t",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          Term.normalize(env, term).right.get should equal (
+            TmProd(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "_0")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.normalize(env, term).right.get should equal (
+            TmProd(Unit, "_0",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
             )
           )
         }
@@ -1078,11 +858,11 @@ class TermSpec extends FunSpec with Matchers {
             TmApp(Unit,
               TmApp(Unit,
                 TmAbs(Unit, "x",
-                  TmVar(Unit, "X"),
+                  TmProd(Unit, "x", TmVar(Unit, "T"), TmProd(Unit, "w", TmVar(Unit, "T"), TmVar(Unit, "T"))),
                   TmAbs(Unit, "y",
-                    TmVar(Unit, "Y"),
+                    TmProd(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "T")),
                     TmAbs(Unit, "z",
-                      TmVar(Unit, "Z"),
+                      TmVar(Unit, "T"),
                       TmApp(Unit,
                         TmApp(Unit, TmVar(Unit, "x"), TmVar(Unit, "z")),
                         TmApp(Unit, TmVar(Unit, "y"), TmVar(Unit, "z"))
@@ -1091,24 +871,263 @@ class TermSpec extends FunSpec with Matchers {
                   )
                 ),
                 TmAbs(Unit, "x",
-                  TmVar(Unit, "X"),
+                  TmVar(Unit, "T"),
                   TmAbs(Unit, "y",
-                    TmVar(Unit, "Y"),
+                    TmVar(Unit, "T"),
                     TmVar(Unit, "x")
                   )
                 )
               ),
               TmAbs(Unit, "x",
-                TmVar(Unit, "X"),
+                TmVar(Unit, "T"),
                 TmAbs(Unit, "y",
-                  TmVar(Unit, "Y"),
+                  TmVar(Unit, "T"),
                   TmVar(Unit, "x")
                 )
               )
             ),
             TmVar(Unit, "x")
           )
-          Term.weakNormalize(env, term) should equal(TmVar(Unit, "x"))
+          Term.normalize(env, term).right.get should equal(TmVar(Unit, "x"))
+        }
+      }
+    }
+    describe(".weakNormalize[I](env: Env[I], term: Term[I]): Term[I]") {
+      it("should perform a reduction on a term and return its weak head normal form") {
+        val env = Map(
+          "T" -> (TmConst(Unit, "*") -> None),
+          "x" -> (TmVar(Unit, "T") -> None),
+          "y" -> (TmVar(Unit, "T") -> None),
+          "f" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> None),
+          "U" -> (TmConst(Unit, "*") -> Some(TmVar(Unit, "T"))),
+          "z" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "x"))),
+          "w" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "z"))),
+          "g" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> Some(TmVar(Unit, "f"))),
+        );
+        {
+          val term = TmVar(Unit, "t")
+          Term.weakNormalize(env, term).left.get should include ("not declared")
+        }
+        {
+          val term = TmVar(Unit, "x")
+          Term.weakNormalize(env, term).right.get should equal (TmVar(Unit, "x"))
+        }
+        {
+          val term = TmVar(Unit, "z")
+          Term.weakNormalize(env, term).right.get should equal (TmVar(Unit, "x"))
+        }
+        {
+          val term = TmVar(Unit, "w")
+          Term.weakNormalize(env, term).right.get should equal (TmVar(Unit, "x"))
+        }
+        {
+          val term = TmConst(Unit, "#")
+          Term.weakNormalize(env, term).right.get should equal (TmConst(Unit, "#"))
+        }
+        {
+          val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "z"))
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "z"))
+          )
+        }
+        {
+          val term = TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "x"))
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
+            TmVar(Unit, "y")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
+            TmVar(Unit, "x")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmAbs(Unit, "t",
+              TmVar(Unit, "T"),
+              TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "t"))
+            ),
+            TmVar(Unit, "y")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
+          )
+        }
+        {
+          val term = TmAbs(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "t")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmAbs(Unit, "t",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "t")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "t",
+            TmVar(Unit, "U"),
+            TmVar(Unit, "t")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmAbs(Unit, "t",
+              TmVar(Unit, "U"),
+              TmVar(Unit, "t")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmAbs(Unit, "t",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "z")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmAbs(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmAbs(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "z")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "t")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmProd(Unit, "t",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "t")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "t",
+            TmVar(Unit, "U"),
+            TmVar(Unit, "t")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmProd(Unit, "t",
+              TmVar(Unit, "U"),
+              TmVar(Unit, "t")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "t",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmProd(Unit, "t",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "z")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "x")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "x")
+            )
+          )
+        }
+        {
+          val term = TmProd(Unit, "x",
+            TmVar(Unit, "T"),
+            TmVar(Unit, "z")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmProd(Unit, "x",
+              TmVar(Unit, "T"),
+              TmVar(Unit, "z")
+            )
+          )
+        }
+        {
+          val term = TmApp(Unit,
+            TmApp(Unit,
+              TmApp(Unit,
+                TmAbs(Unit, "x",
+                  TmProd(Unit, "x", TmVar(Unit, "T"), TmProd(Unit, "w", TmVar(Unit, "T"), TmVar(Unit, "T"))),
+                  TmAbs(Unit, "y",
+                    TmProd(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "T")),
+                    TmAbs(Unit, "z",
+                      TmVar(Unit, "T"),
+                      TmApp(Unit,
+                        TmApp(Unit, TmVar(Unit, "x"), TmVar(Unit, "z")),
+                        TmApp(Unit, TmVar(Unit, "y"), TmVar(Unit, "z"))
+                      )
+                    )
+                  )
+                ),
+                TmAbs(Unit, "x",
+                  TmVar(Unit, "T"),
+                  TmAbs(Unit, "y",
+                    TmVar(Unit, "T"),
+                    TmVar(Unit, "x")
+                  )
+                )
+              ),
+              TmAbs(Unit, "x",
+                TmVar(Unit, "T"),
+                TmAbs(Unit, "y",
+                  TmVar(Unit, "T"),
+                  TmVar(Unit, "x")
+                )
+              )
+            ),
+            TmVar(Unit, "x")
+          )
+          Term.weakNormalize(env, term).right.get should equal(TmVar(Unit, "x"))
         }
       }
     }
