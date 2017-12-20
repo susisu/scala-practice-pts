@@ -17,12 +17,14 @@ object Parser extends RegexParsers {
   case class TkConst(name: String) extends Token
   case class TkAssume() extends Token
   case class TkDefine() extends Token
+  case class TkPrint() extends Token
+  case class TkCompute() extends Token
   case class TkEqual() extends Token
 
   override def skipWhitespace = true
   override val whiteSpace = "[ \t\r\n\f]+".r
 
-  val reservedWords: Set[String] = Set("fun", "forall", "assume", "define")
+  val reservedWords: Set[String] = Set("fun", "forall", "assume", "define", "print", "compute")
 
   def tkLParen: Parser[TkLParen] = positioned ("("      ^^ { _ => TkLParen() })
   def tkRParen: Parser[TkRParen] = positioned (")"      ^^ { _ => TkRParen() })
@@ -38,9 +40,11 @@ object Parser extends RegexParsers {
   )
   def tkConst: Parser[TkConst] = positioned (raw"[\*#]".r ^^ { TkConst(_) })
 
-  def tkAssume: Parser[TkAssume] = positioned ("assume" ^^ { _ => TkAssume() })
-  def tkDefine: Parser[TkDefine] = positioned ("define" ^^ { _ => TkDefine() })
-  def tkEqual : Parser[TkEqual]  = positioned ("="      ^^ { _ => TkEqual() })
+  def tkAssume : Parser[TkAssume] = positioned ("assume"  ^^ { _ => TkAssume() })
+  def tkDefine : Parser[TkDefine] = positioned ("define"  ^^ { _ => TkDefine() })
+  def tkPrint  : Parser[TkDefine] = positioned ("print"   ^^ { _ => TkDefine() })
+  def tkCompute: Parser[TkDefine] = positioned ("compute" ^^ { _ => TkDefine() })
+  def tkEqual  : Parser[TkEqual]  = positioned ("="       ^^ { _ => TkEqual() })
 
   def pattern: Parser[String] =
       tkUnder ^^^ "_" |
@@ -62,13 +66,13 @@ object Parser extends RegexParsers {
     }
   def tmAbs: Parser[TmAbs[Position]] =
     tkFun ~ pattern ~ (tkColon ~> term) ~ (tkDot ~> term) ^^ {
-      case fun ~ paramName ~ paramType ~ body =>
-        TmAbs(fun.pos, paramName, paramType, body)
+      case head ~ paramName ~ paramType ~ body =>
+        TmAbs(head.pos, paramName, paramType, body)
     }
   def tmProd: Parser[TmProd[Position]] =
     tkForall ~ pattern ~ (tkColon ~> term) ~ (tkDot ~> term) ^^ {
-      case forall ~ paramName ~ paramType ~ body =>
-        TmProd(forall.pos, paramName, paramType, body)
+      case head ~ paramName ~ paramType ~ body =>
+        TmProd(head.pos, paramName, paramType, body)
     }
   def tmArrow: Parser[Term[Position]] =
     tmApp ~ opt(tkArrow ~ term) ^^ {
@@ -79,4 +83,22 @@ object Parser extends RegexParsers {
     tmAbs |
     tmProd |
     tmArrow
+
+  def inAssume: Parser[InAssume[Position]] =
+    tkAssume ~ tkIdent ~ (tkColon ~> term) ^^ {
+      case head ~ ident ~ itsType => InAssume(head.pos, ident.name, itsType)
+    }
+  def inDefine: Parser[InDefine[Position]] =
+    tkDefine ~ tkIdent ~ opt (tkColon ~> term) ~ (tkEqual ~> term) ^^ {
+      case head ~ ident ~ itsType ~ term => InDefine(head.pos, ident.name, itsType, term)
+    }
+  def inPrint: Parser[InPrint[Position]] =
+    tkPrint ~ tkIdent ^^ {
+      case head ~ ident => InPrint(head.pos, ident.name)
+    }
+  def inCompute: Parser[InCompute[Position]] =
+    tkPrint ~ term ^^ {
+      case head ~ term => InCompute(head.pos, term)
+    }
+  def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inCompute
 }
