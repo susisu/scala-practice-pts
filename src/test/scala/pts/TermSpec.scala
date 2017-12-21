@@ -7,43 +7,43 @@ class TermSpec extends FunSpec with Matchers {
   describe("TmVar[I]") {
     describe("#freeVars: Set[String]") {
       it("should be a singleton set which contains its name") {
-        val term = TmVar(Unit, "x")
+        val term = TmVar((), "x")
         term.freeVars should equal (Set("x"))
       }
     }
 
     describe("#toString(): String") {
       it("should return its name") {
-        val term = TmVar(Unit, "x")
+        val term = TmVar((), "x")
         term.toString should be ("x")
       }
     }
 
     describe("#renameFreeVar(oldName: String, newName: String): TmVar[I]") {
       it("should rename its name if it is the same as the specified old name") {
-        val term = TmVar(Unit, "x")
-        term.renameFreeVar("x", "z") should equal (TmVar(Unit, "z"))
-        term.renameFreeVar("y", "z") should equal (TmVar(Unit, "x"))
+        val term = TmVar((), "x")
+        term.renameFreeVar("x", "z") should equal (TmVar((), "z"))
+        term.renameFreeVar("y", "z") should equal (TmVar((), "x"))
       }
     }
 
     describe("#alphaEquals(term: Term[I]): Boolean") {
       it("should return true if the given term is a variable of the same name") {
-        val term = TmVar(Unit, "x")
-        term.alphaEquals(TmVar(Unit, "x")) should be (true)
-        term.alphaEquals(TmVar(Unit, "y")) should be (false)
-        term.alphaEquals(TmConst(Unit, "x")) should be (false)
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        val term = TmVar((), "x")
+        term.alphaEquals(TmVar((), "x")) should be (true)
+        term.alphaEquals(TmVar((), "y")) should be (false)
+        term.alphaEquals(TmConst((), "x")) should be (false)
+        term.alphaEquals(TmApp((), TmVar((), "f"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmAbs((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmProd((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
       }
     }
 
     describe("substitute(name: String, term: Term[I]): Term[I]") {
       it("should return the given term if and only if the given name is the same as the variable name") {
-        val term = TmVar(Unit, "x")
-        term.substitute("x", TmVar(Unit, "y")) should equal (TmVar(Unit, "y"))
-        term.substitute("y", TmVar(Unit, "z")) should equal (TmVar(Unit, "x"))
+        val term = TmVar((), "x")
+        term.substitute("x", TmVar((), "y")) should equal (TmVar((), "y"))
+        term.substitute("y", TmVar((), "z")) should equal (TmVar((), "x"))
       }
     }
   }
@@ -51,43 +51,43 @@ class TermSpec extends FunSpec with Matchers {
   describe("TmConst[I]") {
     describe("#freeVars: Set[String]") {
       it("should be an empty set") {
-        val term = TmConst(Unit, "*")
+        val term = TmConst((), "*")
         term.freeVars should equal (Set.empty)
       }
     }
 
     describe("#toString(): String") {
       it("should return its name") {
-        val term = TmConst(Unit, "*")
+        val term = TmConst((), "*")
         term.toString should be ("*")
       }
     }
 
     describe("#renameFreeVar(oldName: String, newName: String): TmConst[I]") {
       it("should always return itself") {
-        val term = TmConst(Unit, "*")
-        term.renameFreeVar("x", "z") should equal (TmConst(Unit, "*"))
-        term.renameFreeVar("*", "#") should equal (TmConst(Unit, "*"))
+        val term = TmConst((), "*")
+        term.renameFreeVar("x", "z") should equal (TmConst((), "*"))
+        term.renameFreeVar("*", "#") should equal (TmConst((), "*"))
       }
     }
 
     describe("#alphaEquals(term: Term[I]): Boolean") {
       it("should return true if the given term is a constant of the same name") {
-        val term = TmConst(Unit, "*")
-        term.alphaEquals(TmConst(Unit, "*")) should be (true)
-        term.alphaEquals(TmConst(Unit, "#")) should be (false)
-        term.alphaEquals(TmVar(Unit, "*")) should be (false)
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        val term = TmConst((), "*")
+        term.alphaEquals(TmConst((), "*")) should be (true)
+        term.alphaEquals(TmConst((), "#")) should be (false)
+        term.alphaEquals(TmVar((), "*")) should be (false)
+        term.alphaEquals(TmApp((), TmVar((), "f"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmAbs((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmProd((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
       }
     }
 
     describe("substitute(name: String, term: Term[I]): Term[I]") {
       it("should always return itself") {
-        val term = TmConst(Unit, "*")
-        term.substitute("x", TmVar(Unit, "y")) should equal (TmConst(Unit, "*"))
-        term.substitute("*", TmVar(Unit, "x")) should equal (TmConst(Unit, "*"))
+        val term = TmConst((), "*")
+        term.substitute("x", TmVar((), "y")) should equal (TmConst((), "*"))
+        term.substitute("*", TmVar((), "x")) should equal (TmConst((), "*"))
       }
     }
   }
@@ -95,9 +95,9 @@ class TermSpec extends FunSpec with Matchers {
   describe("TmApp[I]") {
     describe("#freeVars: Set[String]") {
       it("should be an union set of the free variables of its function and argument") {
-        val term = TmApp(Unit,
-          TmVar(Unit, "f"),
-          TmVar(Unit, "x")
+        val term = TmApp((),
+          TmVar((), "f"),
+          TmVar((), "x")
         )
         term.freeVars should equal (Set("f", "x"))
       }
@@ -106,82 +106,82 @@ class TermSpec extends FunSpec with Matchers {
     describe("#toString(): String") {
       it("should return a string representation of the application") {
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmVar((), "x")
           )
           term.toString should be ("f x")
         }
         {
-          val term = TmApp(Unit,
-            TmConst(Unit, "*"),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmConst((), "*"),
+            TmVar((), "x")
           )
           term.toString should be ("* x")
         }
         {
-          val term = TmApp(Unit,
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = TmApp((),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             ),
-            TmVar(Unit, "y")
+            TmVar((), "y")
           )
           term.toString should be ("f x y")
         }
         {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+          val term = TmApp((),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
             ),
-            TmVar(Unit, "y")
+            TmVar((), "y")
           )
           term.toString should be ("(fun x: T. x) y")
         }
         {
-          val term = TmApp(Unit,
-            TmProd(Unit, "T",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "T")
+          val term = TmApp((),
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmVar((), "T")
             ),
-            TmVar(Unit, "U")
+            TmVar((), "U")
           )
           term.toString should be ("(forall T: *. T) U")
         }
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmConst(Unit, "*")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmConst((), "*")
           )
           term.toString should be ("f *")
         }
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmApp(Unit,
-              TmVar(Unit, "x"),
-              TmVar(Unit, "y")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmApp((),
+              TmVar((), "x"),
+              TmVar((), "y")
             )
           )
           term.toString should be ("f (x y)")
         }
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
           term.toString should be ("f (fun x: T. x)")
         }
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmProd(Unit, "T",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "T")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmVar((), "T")
             )
           )
           term.toString should be ("f (forall T: *. T)")
@@ -192,38 +192,38 @@ class TermSpec extends FunSpec with Matchers {
     describe("#renameFreeVar(oldName: String, newName: String): TmApp[I]") {
       it("should rename free variables in the function and the argument") {
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmVar((), "x")
           )
           term.renameFreeVar("f", "g") should equal (
-            TmApp(Unit,
-              TmVar(Unit, "g"),
-              TmVar(Unit, "x")
+            TmApp((),
+              TmVar((), "g"),
+              TmVar((), "x")
             )
           )
           term.renameFreeVar("x", "z") should equal (
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "z")
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "z")
             )
           )
           term.renameFreeVar("y", "z") should equal (
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "x"),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmVar((), "x"),
+            TmVar((), "x")
           )
           term.renameFreeVar("x", "z") should equal (
-            TmApp(Unit,
-              TmVar(Unit, "z"),
-              TmVar(Unit, "z")
+            TmApp((),
+              TmVar((), "z"),
+              TmVar((), "z")
             )
           )
         }
@@ -232,52 +232,52 @@ class TermSpec extends FunSpec with Matchers {
 
     describe("#alphaEquals(term: Term[I]): Boolean") {
       it("should return true if the given term is an application of the equal function and argument") {
-        val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (true)
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))) should be (false)
-        term.alphaEquals(TmVar(Unit, "x")) should be (false)
-        term.alphaEquals(TmConst(Unit, "*")) should be (false)
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        val term = TmApp((), TmVar((), "f"), TmVar((), "x"))
+        term.alphaEquals(TmApp((), TmVar((), "f"), TmVar((), "x"))) should be (true)
+        term.alphaEquals(TmApp((), TmVar((), "g"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmApp((), TmVar((), "f"), TmVar((), "y"))) should be (false)
+        term.alphaEquals(TmVar((), "x")) should be (false)
+        term.alphaEquals(TmConst((), "*")) should be (false)
+        term.alphaEquals(TmAbs((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmProd((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
       }
     }
 
     describe("substitute(name: String, term: Term[I]): Term[I]") {
       it("should return an application with variables in its function and argument substited") {
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmVar((), "x")
           )
-          term.substitute("f", TmVar(Unit, "g")) should equal (
-            TmApp(Unit,
-              TmVar(Unit, "g"),
-              TmVar(Unit, "x")
+          term.substitute("f", TmVar((), "g")) should equal (
+            TmApp((),
+              TmVar((), "g"),
+              TmVar((), "x")
             )
           )
-          term.substitute("x", TmVar(Unit, "y")) should equal (
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "y")
+          term.substitute("x", TmVar((), "y")) should equal (
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "y")
             )
           )
-          term.substitute("y", TmVar(Unit, "z")) should equal (
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          term.substitute("y", TmVar((), "z")) should equal (
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmApp(Unit,
-            TmVar(Unit, "x"),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmVar((), "x"),
+            TmVar((), "x")
           )
-          term.substitute("x", TmVar(Unit, "y")) should equal (
-            TmApp(Unit,
-              TmVar(Unit, "y"),
-              TmVar(Unit, "y")
+          term.substitute("x", TmVar((), "y")) should equal (
+            TmApp((),
+              TmVar((), "y"),
+              TmVar((), "y")
             )
           )
         }
@@ -289,21 +289,21 @@ class TermSpec extends FunSpec with Matchers {
     describe("#freeVars: Set[String]") {
       it("should be a set of its free variables") {
         {
-          val term = new TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = new TmAbs((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
           term.freeVars should equal (Set("T", "f"))
         }
         {
-          val term = new TmAbs(Unit, "x",
-            TmVar(Unit, "x"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = new TmAbs((), "x",
+            TmVar((), "x"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
           term.freeVars should equal (Set("x", "f"))
@@ -313,9 +313,9 @@ class TermSpec extends FunSpec with Matchers {
 
     describe("#toString(): String") {
       it("should return a string representation of the abstraction") {
-        val term = new TmAbs(Unit, "x",
-          TmVar(Unit, "T"),
-          TmVar(Unit, "x")
+        val term = new TmAbs((), "x",
+          TmVar((), "T"),
+          TmVar((), "x")
         )
         term.toString should be ("fun x: T. x")
       }
@@ -323,46 +323,46 @@ class TermSpec extends FunSpec with Matchers {
 
     describe("#renameFreeVar(oldName: String, newName: String): TmAbs[I]") {
       it("should rename free variables in the parameter type and the body") {
-        val term = new TmAbs(Unit, "x",
-          TmVar(Unit, "T"),
-          TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmVar(Unit, "x")
+        val term = new TmAbs((), "x",
+          TmVar((), "T"),
+          TmApp((),
+            TmVar((), "f"),
+            TmVar((), "x")
           )
         )
         term.renameFreeVar("T", "U") should equal (
-          new TmAbs(Unit, "x",
-            TmVar(Unit, "U"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          new TmAbs((), "x",
+            TmVar((), "U"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         )
         term.renameFreeVar("f", "g") should equal (
-          new TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "g"),
-              TmVar(Unit, "x")
+          new TmAbs((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "g"),
+              TmVar((), "x")
             )
           )
         )
         term.renameFreeVar("x", "y") should equal (
-          new TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          new TmAbs((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         )
         term.renameFreeVar("y", "z") should equal (
-          new TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          new TmAbs((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         )
@@ -371,61 +371,61 @@ class TermSpec extends FunSpec with Matchers {
 
     describe("#alphaEquals(term: Term[I]): Boolean") {
       it("should return true if the given term is an abstraction with the equal parameter type and body") {
-        val term = TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (true)
-        term.alphaEquals(TmAbs(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "z"))) should be (true)
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "U"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "y"))) should be (false)
-        term.alphaEquals(TmVar(Unit, "x")) should be (false)
-        term.alphaEquals(TmConst(Unit, "*")) should be (false)
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        val term = TmAbs((), "x", TmVar((), "T"), TmVar((), "x"))
+        term.alphaEquals(TmAbs((), "x", TmVar((), "T"), TmVar((), "x"))) should be (true)
+        term.alphaEquals(TmAbs((), "z", TmVar((), "T"), TmVar((), "z"))) should be (true)
+        term.alphaEquals(TmAbs((), "x", TmVar((), "U"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmAbs((), "x", TmVar((), "T"), TmVar((), "y"))) should be (false)
+        term.alphaEquals(TmVar((), "x")) should be (false)
+        term.alphaEquals(TmConst((), "*")) should be (false)
+        term.alphaEquals(TmApp((), TmVar((), "f"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmProd((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
       }
     }
 
     describe("substitute(name: String, term: Term[I]): Term[I]") {
       it("should return an abstraction with variables in its parameter type and body substited") {
         {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
-          term.substitute("T", TmVar(Unit, "U")) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "U"),
-              TmVar(Unit, "x")
+          term.substitute("T", TmVar((), "U")) should equal (
+            TmAbs((), "x",
+              TmVar((), "U"),
+              TmVar((), "x")
             )
           )
-          term.substitute("x", TmVar(Unit, "y")) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+          term.substitute("x", TmVar((), "y")) should equal (
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
-          term.substitute("f", TmVar(Unit, "g")) should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmApp(Unit,
-                TmVar(Unit, "g"),
-                TmVar(Unit, "x")
+          term.substitute("f", TmVar((), "g")) should equal (
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmApp((),
+                TmVar((), "g"),
+                TmVar((), "x")
               )
             )
           )
-          term.substitute("f", TmVar(Unit, "x")) should equal (
-            TmAbs(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmApp(Unit,
-                TmVar(Unit, "x"),
-                TmVar(Unit, "_0")
+          term.substitute("f", TmVar((), "x")) should equal (
+            TmAbs((), "_0",
+              TmVar((), "T"),
+              TmApp((),
+                TmVar((), "x"),
+                TmVar((), "_0")
               )
             )
           )
@@ -438,21 +438,21 @@ class TermSpec extends FunSpec with Matchers {
     describe("#freeVars: Set[String]") {
       it("should be a set of its free variables") {
         {
-          val term = new TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = new TmProd((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
           term.freeVars should equal (Set("T", "f"))
         }
         {
-          val term = new TmProd(Unit, "x",
-            TmVar(Unit, "x"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = new TmProd((), "x",
+            TmVar((), "x"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
           term.freeVars should equal (Set("x", "f"))
@@ -463,73 +463,73 @@ class TermSpec extends FunSpec with Matchers {
     describe("#toString(): String") {
       it("should return a string representation of the product") {
         {
-          val term = new TmProd(Unit, "_",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "U")
+          val term = new TmProd((), "_",
+            TmVar((), "T"),
+            TmVar((), "U")
           )
           term.toString should be ("T -> U")
         }
         {
-          val term = new TmProd(Unit, "_",
-            TmConst(Unit, "*"),
-            TmVar(Unit, "T")
+          val term = new TmProd((), "_",
+            TmConst((), "*"),
+            TmVar((), "T")
           )
           term.toString should be ("* -> T")
         }
         {
-          val term = new TmProd(Unit, "_",
-            TmApp(Unit,
-              TmVar(Unit, "F"),
-              TmVar(Unit, "T")
+          val term = new TmProd((), "_",
+            TmApp((),
+              TmVar((), "F"),
+              TmVar((), "T")
             ),
-            TmVar(Unit, "U")
+            TmVar((), "U")
           )
           term.toString should be ("F T -> U")
         }
         {
-          val term = new TmProd(Unit, "_",
-            TmAbs(Unit, "T",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "T")
+          val term = new TmProd((), "_",
+            TmAbs((), "T",
+              TmConst((), "*"),
+              TmVar((), "T")
             ),
-            TmVar(Unit, "U")
+            TmVar((), "U")
           )
           term.toString should be ("(fun T: *. T) -> U")
         }
         {
-          val term = new TmProd(Unit, "_",
-            TmProd(Unit, "T",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "T")
+          val term = new TmProd((), "_",
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmVar((), "T")
             ),
-            TmVar(Unit, "U")
+            TmVar((), "U")
           )
           term.toString should be ("(forall T: *. T) -> U")
         }
         {
-          val term = new TmProd(Unit, "_",
-            TmVar(Unit, "T"),
-            TmAbs(Unit, "U",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "U")
+          val term = new TmProd((), "_",
+            TmVar((), "T"),
+            TmAbs((), "U",
+              TmConst((), "*"),
+              TmVar((), "U")
             )
           )
           term.toString should be ("T -> fun U: *. U")
         }
         {
-          val term = new TmProd(Unit, "_",
-            TmVar(Unit, "T"),
-            TmProd(Unit, "U",
-              TmConst(Unit, "*"),
-              TmVar(Unit, "U")
+          val term = new TmProd((), "_",
+            TmVar((), "T"),
+            TmProd((), "U",
+              TmConst((), "*"),
+              TmVar((), "U")
             )
           )
           term.toString should be ("T -> forall U: *. U")
         }
         {
-          val term = new TmProd(Unit, "T",
-            TmConst(Unit, "*"),
-            TmVar(Unit, "T")
+          val term = new TmProd((), "T",
+            TmConst((), "*"),
+            TmVar((), "T")
           )
           term.toString should be ("forall T: *. T")
         }
@@ -538,46 +538,46 @@ class TermSpec extends FunSpec with Matchers {
 
     describe("#renameFreeVar(oldName: String, newName: String): TmProd[I]") {
       it("should rename free variables in the parameter type and the body") {
-        val term = new TmProd(Unit, "x",
-          TmVar(Unit, "T"),
-          TmApp(Unit,
-            TmVar(Unit, "f"),
-            TmVar(Unit, "x")
+        val term = new TmProd((), "x",
+          TmVar((), "T"),
+          TmApp((),
+            TmVar((), "f"),
+            TmVar((), "x")
           )
         )
         term.renameFreeVar("T", "U") should equal (
-          new TmProd(Unit, "x",
-            TmVar(Unit, "U"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          new TmProd((), "x",
+            TmVar((), "U"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         )
         term.renameFreeVar("f", "g") should equal (
-          new TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "g"),
-              TmVar(Unit, "x")
+          new TmProd((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "g"),
+              TmVar((), "x")
             )
           )
         )
         term.renameFreeVar("x", "y") should equal (
-          new TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          new TmProd((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         )
         term.renameFreeVar("y", "z") should equal (
-          new TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          new TmProd((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
         )
@@ -586,61 +586,61 @@ class TermSpec extends FunSpec with Matchers {
 
     describe("#alphaEquals(term: Term[I]): Boolean") {
       it("should return true if the given term is a product with the equal parameter type and body") {
-        val term = TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (true)
-        term.alphaEquals(TmProd(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "z"))) should be (true)
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "U"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "y"))) should be (false)
-        term.alphaEquals(TmVar(Unit, "x")) should be (false)
-        term.alphaEquals(TmConst(Unit, "*")) should be (false)
-        term.alphaEquals(TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))) should be (false)
-        term.alphaEquals(TmAbs(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "x"))) should be (false)
+        val term = TmProd((), "x", TmVar((), "T"), TmVar((), "x"))
+        term.alphaEquals(TmProd((), "x", TmVar((), "T"), TmVar((), "x"))) should be (true)
+        term.alphaEquals(TmProd((), "z", TmVar((), "T"), TmVar((), "z"))) should be (true)
+        term.alphaEquals(TmProd((), "x", TmVar((), "U"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmProd((), "x", TmVar((), "T"), TmVar((), "y"))) should be (false)
+        term.alphaEquals(TmVar((), "x")) should be (false)
+        term.alphaEquals(TmConst((), "*")) should be (false)
+        term.alphaEquals(TmApp((), TmVar((), "f"), TmVar((), "x"))) should be (false)
+        term.alphaEquals(TmAbs((), "x", TmVar((), "T"), TmVar((), "x"))) should be (false)
       }
     }
 
     describe("substitute(name: String, term: Term[I]): Term[I]") {
       it("should return a product with variables in its parameter type and body substited") {
         {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
-          term.substitute("T", TmVar(Unit, "U")) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "U"),
-              TmVar(Unit, "x")
+          term.substitute("T", TmVar((), "U")) should equal (
+            TmProd((), "x",
+              TmVar((), "U"),
+              TmVar((), "x")
             )
           )
-          term.substitute("x", TmVar(Unit, "y")) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+          term.substitute("x", TmVar((), "y")) should equal (
+            TmProd((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmApp(Unit,
-              TmVar(Unit, "f"),
-              TmVar(Unit, "x")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "f"),
+              TmVar((), "x")
             )
           )
-          term.substitute("f", TmVar(Unit, "g")) should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmApp(Unit,
-                TmVar(Unit, "g"),
-                TmVar(Unit, "x")
+          term.substitute("f", TmVar((), "g")) should equal (
+            TmProd((), "x",
+              TmVar((), "T"),
+              TmApp((),
+                TmVar((), "g"),
+                TmVar((), "x")
               )
             )
           )
-          term.substitute("f", TmVar(Unit, "x")) should equal (
-            TmProd(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmApp(Unit,
-                TmVar(Unit, "x"),
-                TmVar(Unit, "_0")
+          term.substitute("f", TmVar((), "x")) should equal (
+            TmProd((), "_0",
+              TmVar((), "T"),
+              TmApp((),
+                TmVar((), "x"),
+                TmVar((), "_0")
               )
             )
           )
@@ -653,481 +653,481 @@ class TermSpec extends FunSpec with Matchers {
     describe(".normalize[I](env: Env[I], term: Term[I]): Term[I]") {
       it("should perform the full beta reduction on a term and return its normal form") {
         val env = Map(
-          "T" -> (TmConst(Unit, "*") -> None),
-          "x" -> (TmVar(Unit, "T") -> None),
-          "y" -> (TmVar(Unit, "T") -> None),
-          "f" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> None),
-          "U" -> (TmConst(Unit, "*") -> Some(TmVar(Unit, "T"))),
-          "z" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "x"))),
-          "w" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "z"))),
-          "g" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> Some(TmVar(Unit, "f"))),
+          "T" -> (TmConst((), "*") -> None),
+          "x" -> (TmVar((), "T") -> None),
+          "y" -> (TmVar((), "T") -> None),
+          "f" -> (TmProd((), "x", TmVar((), "T"), TmVar((), "T")) -> None),
+          "U" -> (TmConst((), "*") -> Some(TmVar((), "T"))),
+          "z" -> (TmVar((), "T") -> Some(TmVar((), "x"))),
+          "w" -> (TmVar((), "T") -> Some(TmVar((), "z"))),
+          "g" -> (TmProd((), "x", TmVar((), "T"), TmVar((), "T")) -> Some(TmVar((), "f"))),
         );
         {
-          val term = TmVar(Unit, "t")
+          val term = TmVar((), "t")
           Term.normalize(env, term).left.get should include ("not declared")
         }
         {
-          val term = TmVar(Unit, "x")
-          Term.normalize(env, term).right.get should equal (TmVar(Unit, "x"))
+          val term = TmVar((), "x")
+          Term.normalize(env, term).right.get should equal (TmVar((), "x"))
         }
         {
-          val term = TmVar(Unit, "z")
-          Term.normalize(env, term).right.get should equal (TmVar(Unit, "x"))
+          val term = TmVar((), "z")
+          Term.normalize(env, term).right.get should equal (TmVar((), "x"))
         }
         {
-          val term = TmVar(Unit, "w")
-          Term.normalize(env, term).right.get should equal (TmVar(Unit, "x"))
+          val term = TmVar((), "w")
+          Term.normalize(env, term).right.get should equal (TmVar((), "x"))
         }
         {
-          val term = TmConst(Unit, "#")
-          Term.normalize(env, term).right.get should equal (TmConst(Unit, "#"))
+          val term = TmConst((), "#")
+          Term.normalize(env, term).right.get should equal (TmConst((), "#"))
         }
         {
-          val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          val term = TmApp((), TmVar((), "f"), TmVar((), "x"))
           Term.normalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "z"))
+          val term =  TmApp((), TmVar((), "f"), TmVar((), "z"))
           Term.normalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term = TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "x"))
+          val term = TmApp((), TmVar((), "g"), TmVar((), "x"))
           Term.normalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "t", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "t"))),
-            TmVar(Unit, "y")
+          val term = TmApp((),
+            TmAbs((), "t", TmVar((), "T"), TmApp((), TmVar((), "f"), TmVar((), "t"))),
+            TmVar((), "y")
           )
           Term.normalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
+            TmApp((), TmVar((), "f"), TmVar((), "y"))
           )
         }
         {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          val term = TmApp((),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmApp((), TmVar((), "f"), TmVar((), "x"))
             ),
-            TmVar(Unit, "x")
+            TmVar((), "x")
           )
           Term.normalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "t"))
+          val term = TmApp((),
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmApp((), TmVar((), "g"), TmVar((), "t"))
             ),
-            TmVar(Unit, "x")
+            TmVar((), "x")
           )
           Term.normalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
+          val term = TmAbs((), "t",
+            TmVar((), "T"),
+            TmVar((), "t")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "U"),
-            TmVar(Unit, "t")
+          val term = TmAbs((), "t",
+            TmVar((), "U"),
+            TmVar((), "t")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmAbs((), "t",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "_0")
+            TmAbs((), "_0",
+              TmVar((), "T"),
+              TmVar((), "_0")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+            TmAbs((), "_0",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
+          val term = TmProd((), "t",
+            TmVar((), "T"),
+            TmVar((), "t")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
+            TmProd((), "t",
+              TmVar((), "T"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "U"),
-            TmVar(Unit, "t")
+          val term = TmProd((), "t",
+            TmVar((), "U"),
+            TmVar((), "t")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
+            TmProd((), "t",
+              TmVar((), "T"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmProd((), "t",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+            TmProd((), "t",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "_0")
+            TmProd((), "_0",
+              TmVar((), "T"),
+              TmVar((), "_0")
             )
           )
         }
         {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd(Unit, "_0",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+            TmProd((), "_0",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmApp(Unit,
-            TmApp(Unit,
-              TmApp(Unit,
-                TmAbs(Unit, "x",
-                  TmProd(Unit, "x", TmVar(Unit, "T"), TmProd(Unit, "w", TmVar(Unit, "T"), TmVar(Unit, "T"))),
-                  TmAbs(Unit, "y",
-                    TmProd(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "T")),
-                    TmAbs(Unit, "z",
-                      TmVar(Unit, "T"),
-                      TmApp(Unit,
-                        TmApp(Unit, TmVar(Unit, "x"), TmVar(Unit, "z")),
-                        TmApp(Unit, TmVar(Unit, "y"), TmVar(Unit, "z"))
+          val term = TmApp((),
+            TmApp((),
+              TmApp((),
+                TmAbs((), "x",
+                  TmProd((), "x", TmVar((), "T"), TmProd((), "w", TmVar((), "T"), TmVar((), "T"))),
+                  TmAbs((), "y",
+                    TmProd((), "z", TmVar((), "T"), TmVar((), "T")),
+                    TmAbs((), "z",
+                      TmVar((), "T"),
+                      TmApp((),
+                        TmApp((), TmVar((), "x"), TmVar((), "z")),
+                        TmApp((), TmVar((), "y"), TmVar((), "z"))
                       )
                     )
                   )
                 ),
-                TmAbs(Unit, "x",
-                  TmVar(Unit, "T"),
-                  TmAbs(Unit, "y",
-                    TmVar(Unit, "T"),
-                    TmVar(Unit, "x")
+                TmAbs((), "x",
+                  TmVar((), "T"),
+                  TmAbs((), "y",
+                    TmVar((), "T"),
+                    TmVar((), "x")
                   )
                 )
               ),
-              TmAbs(Unit, "x",
-                TmVar(Unit, "T"),
-                TmAbs(Unit, "y",
-                  TmVar(Unit, "T"),
-                  TmVar(Unit, "x")
+              TmAbs((), "x",
+                TmVar((), "T"),
+                TmAbs((), "y",
+                  TmVar((), "T"),
+                  TmVar((), "x")
                 )
               )
             ),
-            TmVar(Unit, "x")
+            TmVar((), "x")
           )
-          Term.normalize(env, term).right.get should equal(TmVar(Unit, "x"))
+          Term.normalize(env, term).right.get should equal(TmVar((), "x"))
         }
       }
     }
     describe(".weakNormalize[I](env: Env[I], term: Term[I]): Term[I]") {
       it("should perform a reduction on a term and return its weak head normal form") {
         val env = Map(
-          "T" -> (TmConst(Unit, "*") -> None),
-          "x" -> (TmVar(Unit, "T") -> None),
-          "y" -> (TmVar(Unit, "T") -> None),
-          "f" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> None),
-          "U" -> (TmConst(Unit, "*") -> Some(TmVar(Unit, "T"))),
-          "z" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "x"))),
-          "w" -> (TmVar(Unit, "T") -> Some(TmVar(Unit, "z"))),
-          "g" -> (TmProd(Unit, "x", TmVar(Unit, "T"), TmVar(Unit, "T")) -> Some(TmVar(Unit, "f"))),
+          "T" -> (TmConst((), "*") -> None),
+          "x" -> (TmVar((), "T") -> None),
+          "y" -> (TmVar((), "T") -> None),
+          "f" -> (TmProd((), "x", TmVar((), "T"), TmVar((), "T")) -> None),
+          "U" -> (TmConst((), "*") -> Some(TmVar((), "T"))),
+          "z" -> (TmVar((), "T") -> Some(TmVar((), "x"))),
+          "w" -> (TmVar((), "T") -> Some(TmVar((), "z"))),
+          "g" -> (TmProd((), "x", TmVar((), "T"), TmVar((), "T")) -> Some(TmVar((), "f"))),
         );
         {
-          val term = TmVar(Unit, "t")
+          val term = TmVar((), "t")
           Term.weakNormalize(env, term).left.get should include ("not declared")
         }
         {
-          val term = TmVar(Unit, "x")
-          Term.weakNormalize(env, term).right.get should equal (TmVar(Unit, "x"))
+          val term = TmVar((), "x")
+          Term.weakNormalize(env, term).right.get should equal (TmVar((), "x"))
         }
         {
-          val term = TmVar(Unit, "z")
-          Term.weakNormalize(env, term).right.get should equal (TmVar(Unit, "x"))
+          val term = TmVar((), "z")
+          Term.weakNormalize(env, term).right.get should equal (TmVar((), "x"))
         }
         {
-          val term = TmVar(Unit, "w")
-          Term.weakNormalize(env, term).right.get should equal (TmVar(Unit, "x"))
+          val term = TmVar((), "w")
+          Term.weakNormalize(env, term).right.get should equal (TmVar((), "x"))
         }
         {
-          val term = TmConst(Unit, "#")
-          Term.weakNormalize(env, term).right.get should equal (TmConst(Unit, "#"))
+          val term = TmConst((), "#")
+          Term.weakNormalize(env, term).right.get should equal (TmConst((), "#"))
         }
         {
-          val term = TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+          val term = TmApp((), TmVar((), "f"), TmVar((), "x"))
           Term.weakNormalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term =  TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "z"))
+          val term =  TmApp((), TmVar((), "f"), TmVar((), "z"))
           Term.weakNormalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "z"))
+            TmApp((), TmVar((), "f"), TmVar((), "z"))
           )
         }
         {
-          val term = TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "x"))
+          val term = TmApp((), TmVar((), "g"), TmVar((), "x"))
           Term.weakNormalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
           )
         }
         {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
-            TmVar(Unit, "y")
-          )
-          Term.weakNormalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
-          )
-        }
-        {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "x", TmVar(Unit, "T"), TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))),
-            TmVar(Unit, "x")
+          val term = TmApp((),
+            TmAbs((), "x", TmVar((), "T"), TmApp((), TmVar((), "f"), TmVar((), "x"))),
+            TmVar((), "y")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "x"))
+            TmApp((), TmVar((), "f"), TmVar((), "y"))
           )
         }
         {
-          val term = TmApp(Unit,
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmApp(Unit, TmVar(Unit, "g"), TmVar(Unit, "t"))
+          val term = TmApp((),
+            TmAbs((), "x", TmVar((), "T"), TmApp((), TmVar((), "f"), TmVar((), "x"))),
+            TmVar((), "x")
+          )
+          Term.weakNormalize(env, term).right.get should equal (
+            TmApp((), TmVar((), "f"), TmVar((), "x"))
+          )
+        }
+        {
+          val term = TmApp((),
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmApp((), TmVar((), "g"), TmVar((), "t"))
             ),
-            TmVar(Unit, "y")
+            TmVar((), "y")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmApp(Unit, TmVar(Unit, "f"), TmVar(Unit, "y"))
+            TmApp((), TmVar((), "f"), TmVar((), "y"))
           )
         }
         {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
+          val term = TmAbs((), "t",
+            TmVar((), "T"),
+            TmVar((), "t")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "U"),
-            TmVar(Unit, "t")
+          val term = TmAbs((), "t",
+            TmVar((), "U"),
+            TmVar((), "t")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmAbs(Unit, "t",
-              TmVar(Unit, "U"),
-              TmVar(Unit, "t")
+            TmAbs((), "t",
+              TmVar((), "U"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmAbs((), "t",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmAbs(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "z")
+            TmAbs((), "t",
+              TmVar((), "T"),
+              TmVar((), "z")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmAbs(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmAbs(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "z")
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "z")
             )
           )
         }
         {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "t")
+          val term = TmProd((), "t",
+            TmVar((), "T"),
+            TmVar((), "t")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmProd(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "t")
+            TmProd((), "t",
+              TmVar((), "T"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "U"),
-            TmVar(Unit, "t")
+          val term = TmProd((), "t",
+            TmVar((), "U"),
+            TmVar((), "t")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmProd(Unit, "t",
-              TmVar(Unit, "U"),
-              TmVar(Unit, "t")
+            TmProd((), "t",
+              TmVar((), "U"),
+              TmVar((), "t")
             )
           )
         }
         {
-          val term = TmProd(Unit, "t",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmProd((), "t",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmProd(Unit, "t",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "z")
+            TmProd((), "t",
+              TmVar((), "T"),
+              TmVar((), "z")
             )
           )
         }
         {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "x")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "x")
+            TmProd((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
             )
           )
         }
         {
-          val term = TmProd(Unit, "x",
-            TmVar(Unit, "T"),
-            TmVar(Unit, "z")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "z")
           )
           Term.weakNormalize(env, term).right.get should equal (
-            TmProd(Unit, "x",
-              TmVar(Unit, "T"),
-              TmVar(Unit, "z")
+            TmProd((), "x",
+              TmVar((), "T"),
+              TmVar((), "z")
             )
           )
         }
         {
-          val term = TmApp(Unit,
-            TmApp(Unit,
-              TmApp(Unit,
-                TmAbs(Unit, "x",
-                  TmProd(Unit, "x", TmVar(Unit, "T"), TmProd(Unit, "w", TmVar(Unit, "T"), TmVar(Unit, "T"))),
-                  TmAbs(Unit, "y",
-                    TmProd(Unit, "z", TmVar(Unit, "T"), TmVar(Unit, "T")),
-                    TmAbs(Unit, "z",
-                      TmVar(Unit, "T"),
-                      TmApp(Unit,
-                        TmApp(Unit, TmVar(Unit, "x"), TmVar(Unit, "z")),
-                        TmApp(Unit, TmVar(Unit, "y"), TmVar(Unit, "z"))
+          val term = TmApp((),
+            TmApp((),
+              TmApp((),
+                TmAbs((), "x",
+                  TmProd((), "x", TmVar((), "T"), TmProd((), "w", TmVar((), "T"), TmVar((), "T"))),
+                  TmAbs((), "y",
+                    TmProd((), "z", TmVar((), "T"), TmVar((), "T")),
+                    TmAbs((), "z",
+                      TmVar((), "T"),
+                      TmApp((),
+                        TmApp((), TmVar((), "x"), TmVar((), "z")),
+                        TmApp((), TmVar((), "y"), TmVar((), "z"))
                       )
                     )
                   )
                 ),
-                TmAbs(Unit, "x",
-                  TmVar(Unit, "T"),
-                  TmAbs(Unit, "y",
-                    TmVar(Unit, "T"),
-                    TmVar(Unit, "x")
+                TmAbs((), "x",
+                  TmVar((), "T"),
+                  TmAbs((), "y",
+                    TmVar((), "T"),
+                    TmVar((), "x")
                   )
                 )
               ),
-              TmAbs(Unit, "x",
-                TmVar(Unit, "T"),
-                TmAbs(Unit, "y",
-                  TmVar(Unit, "T"),
-                  TmVar(Unit, "x")
+              TmAbs((), "x",
+                TmVar((), "T"),
+                TmAbs((), "y",
+                  TmVar((), "T"),
+                  TmVar((), "x")
                 )
               )
             ),
-            TmVar(Unit, "x")
+            TmVar((), "x")
           )
-          Term.weakNormalize(env, term).right.get should equal(TmVar(Unit, "x"))
+          Term.weakNormalize(env, term).right.get should equal(TmVar((), "x"))
         }
       }
     }
