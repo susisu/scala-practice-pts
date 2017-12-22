@@ -97,7 +97,7 @@ object Parser extends RegexParsers {
       case head ~ ident => InPrint(head.pos, ident.name)
     }
   def inCompute: Parser[InCompute[Position]] =
-    tkPrint ~ term ^^ {
+    tkCompute ~ term ^^ {
       case head ~ term => InCompute(head.pos, term)
     }
   def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inCompute
