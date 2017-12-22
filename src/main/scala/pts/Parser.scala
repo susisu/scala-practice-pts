@@ -79,10 +79,7 @@ object Parser extends RegexParsers {
       case dom ~ Some(arr ~ codom) => TmProd(arr.pos, "_", dom, codom)
       case tm ~ None => tm
     }
-  def term: Parser[Term[Position]] =
-    tmAbs |
-    tmProd |
-    tmArrow
+  def term: Parser[Term[Position]] = tmAbs | tmProd | tmArrow
 
   def inAssume: Parser[InAssume[Position]] =
     tkAssume ~ tkIdent ~ (tkColon ~> term) ^^ {
@@ -101,4 +98,6 @@ object Parser extends RegexParsers {
       case head ~ term => InCompute(head.pos, term)
     }
   def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inCompute
+
+  def instructions: Parser[List[Instruction[Position]]] = phrase(rep(instruction))
 }
