@@ -4,6 +4,12 @@ import scala.collection.immutable._
 import org.scalatest._
 
 class TermSpec extends FunSpec with Matchers {
+  implicit object UnitInfo extends SourceInfo[Unit] {
+    type noInfoType = Unit
+    def noInfo = ()
+    def showMessage(info: Unit, msg: String): String = msg
+  }
+
   describe("TmVar[I]") {
     describe("#freeVars: Set[String]") {
       it("should be a singleton set which contains its name") {

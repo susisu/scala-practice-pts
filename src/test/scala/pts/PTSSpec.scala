@@ -4,6 +4,12 @@ import scala.collection.immutable.Set
 import org.scalatest._
 
 class PTSSpec extends FunSpec with Matchers {
+  implicit object UnitInfo extends SourceInfo[Unit] {
+    type noInfoType = Unit
+    def noInfo = ()
+    def showMessage(info: Unit, msg: String): String = msg
+  }
+
   describe("PTS") {
     describe("#typeOf[I](env: Term.Env[Option[I]], term: Term[Option[I]]): Term[Option[I]]") {
       it("should compute the type of the given term") {
@@ -18,254 +24,254 @@ class PTSSpec extends FunSpec with Matchers {
         )
         val env = Map(
           "T" -> ((
-            TmConst(Some(()), "*"),
+            TmConst((), "*"),
             None
           )),
           "U" -> ((
-            TmConst(Some(()), "*"),
+            TmConst((), "*"),
             None
           )),
           "t" -> ((
-            TmVar(Some(()), "T"),
+            TmVar((), "T"),
             None
           )),
           "u" -> ((
-            TmVar(Some(()), "U"),
+            TmVar((), "U"),
             None
           )),
           "f" -> ((
-            TmProd(Some(()), "x",
-              TmVar(Some(()), "T"),
-              TmVar(Some(()), "U")
+            TmProd((), "x",
+              TmVar((), "T"),
+              TmVar((), "U")
             ),
             None
           )),
           "F" -> ((
-            TmProd(Some(()), "T",
-              TmConst(Some(()), "*"),
-              TmConst(Some(()), "*")
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmConst((), "*")
             ),
             None
           )),
           "K" -> ((
-            TmProd(Some(()), "T",
-              TmConst(Some(()), "*"),
-              TmProd(Some(()), "U",
-                TmConst(Some(()), "*"),
-                TmConst(Some(()), "*")
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmProd((), "U",
+                TmConst((), "*"),
+                TmConst((), "*")
               )
             ),
             Some(
-              TmAbs(Some(()), "T",
-                TmConst(Some(()), "*"),
-                TmAbs(Some(()), "U",
-                  TmConst(Some(()), "*"),
-                  TmVar(Some(()), "T")
+              TmAbs((), "T",
+                TmConst((), "*"),
+                TmAbs((), "U",
+                  TmConst((), "*"),
+                  TmVar((), "T")
                 )
               )
             )
           ))
         );
         {
-          val term = TmVar(Some(()), "t")
+          val term = TmVar((), "t")
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmVar(Some(()), "T")
+            TmVar((), "T")
           ) should be (true)
         }
         {
-          val term = TmVar(Some(()), "x")
+          val term = TmVar((), "x")
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("not declared")
         }
         {
-          val term = TmConst(Some(()), "*")
+          val term = TmConst((), "*")
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmConst(Some(()), "#")
+            TmConst((), "#")
           ) should be (true)
         }
         {
-          val term = TmConst(Some(()), "#")
+          val term = TmConst((), "#")
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("no axiom")
         }
         {
-          val term = TmApp(Some(()),
-            TmVar(Some(()), "f"),
-            TmVar(Some(()), "t")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmVar((), "t")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmVar(Some(()), "U")
+            TmVar((), "U")
           ) should be (true)
         }
         {
-          val term = TmApp(Some(()),
-            TmVar(Some(()), "F"),
-            TmApp(Some(()),
-              TmApp(Some(()),
-                TmVar(Some(()), "K"),
-                TmVar(Some(()), "T")
+          val term = TmApp((),
+            TmVar((), "F"),
+            TmApp((),
+              TmApp((),
+                TmVar((), "K"),
+                TmVar((), "T")
               ),
-              TmVar(Some(()), "U")
+              TmVar((), "U")
             )
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmConst(Some(()), "*")
+            TmConst((), "*")
           ) should be (true)
         }
         {
-          val term = TmApp(Some(()),
-            TmVar(Some(()), "t"),
-            TmVar(Some(()), "t")
+          val term = TmApp((),
+            TmVar((), "t"),
+            TmVar((), "t")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("function")
         }
         {
-          val term = TmApp(Some(()),
-            TmVar(Some(()), "f"),
-            TmVar(Some(()), "u")
+          val term = TmApp((),
+            TmVar((), "f"),
+            TmVar((), "u")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("argument")
         }
         {
-          val term = TmAbs(Some(()), "x",
-            TmVar(Some(()), "T"),
-            TmVar(Some(()), "x")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmProd(Some(()), "x",
-              TmVar(Some(()), "T"),
-              TmVar(Some(()), "T")
+            TmProd((), "x",
+              TmVar((), "T"),
+              TmVar((), "T")
             )
           ) should be (true)
         }
         {
-          val term = TmAbs(Some(()), "u",
-            TmVar(Some(()), "T"),
-            TmVar(Some(()), "u")
+          val term = TmAbs((), "u",
+            TmVar((), "T"),
+            TmVar((), "u")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmProd(Some(()), "u",
-              TmVar(Some(()), "T"),
-              TmVar(Some(()), "T")
+            TmProd((), "u",
+              TmVar((), "T"),
+              TmVar((), "T")
             )
           ) should be (true)
         }
         {
-          val term = TmAbs(Some(()), "x",
-            TmConst(Some(()), "*"),
-            TmVar(Some(()), "T")
+          val term = TmAbs((), "x",
+            TmConst((), "*"),
+            TmVar((), "T")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmProd(Some(()), "x",
-              TmConst(Some(()), "*"),
-              TmConst(Some(()), "*")
+            TmProd((), "x",
+              TmConst((), "*"),
+              TmConst((), "*")
             )
           ) should be (true)
         }
         {
-          val term = TmAbs(Some(()), "x",
-            TmVar(Some(()), "T"),
-            TmConst(Some(()), "*")
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmConst((), "*")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("no axiom")
         }
         {
-          val term = TmAbs(Some(()), "x",
-            TmConst(Some(()), "*"),
-            TmConst(Some(()), "*")
+          val term = TmAbs((), "x",
+            TmConst((), "*"),
+            TmConst((), "*")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("no axiom")
         }
         {
-          val term = TmProd(Some(()), "x",
-            TmVar(Some(()), "T"),
-            TmVar(Some(()), "T")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "T")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmConst(Some(()), "*")
+            TmConst((), "*")
           ) should be (true)
         }
         {
-          val term = TmProd(Some(()), "u",
-            TmVar(Some(()), "T"),
-            TmVar(Some(()), "T")
+          val term = TmProd((), "u",
+            TmVar((), "T"),
+            TmVar((), "T")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmConst(Some(()), "*")
+            TmConst((), "*")
           ) should be (true)
         }
         {
-          val term = TmProd(Some(()), "x",
-            TmVar(Some(()), "T"),
-            TmConst(Some(()), "*")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmConst((), "*")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmConst(Some(()), "#")
+            TmConst((), "#")
           ) should be (true)
         }
         {
-          val term = TmProd(Some(()), "x",
-            TmConst(Some(()), "*"),
-            TmConst(Some(()), "*")
+          val term = TmProd((), "x",
+            TmConst((), "*"),
+            TmConst((), "*")
           )
           val res = pts.typeOf(env, term)
           res.isRight should be (true)
           res.right.get.alphaEquals(
-            TmConst(Some(()), "#")
+            TmConst((), "#")
           ) should be (true)
         }
         {
-          val term = TmProd(Some(()), "x",
-            TmConst(Some(()), "*"),
-            TmVar(Some(()), "T")
+          val term = TmProd((), "x",
+            TmConst((), "*"),
+            TmVar((), "T")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("no rule")
         }
         {
-          val term = TmProd(Some(()), "x",
-            TmVar(Some(()), "t"),
-            TmVar(Some(()), "T")
+          val term = TmProd((), "x",
+            TmVar((), "t"),
+            TmVar((), "T")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)
           res.left.get should include ("not a sort")
         }
         {
-          val term = TmProd(Some(()), "x",
-            TmVar(Some(()), "T"),
-            TmVar(Some(()), "x")
+          val term = TmProd((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
           )
           val res = pts.typeOf(env, term)
           res.isLeft should be (true)

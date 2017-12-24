@@ -197,12 +197,12 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
 object Term {
   type Env[I] = Map[String, (Term[I], Option[Term[I]])]
 
-  def normalize[I](env: Env[I], term: Term[I]): Either[String, Term[I]] = term match {
+  def normalize[I](env: Env[I], term: Term[I])(implicit si: SourceInfo[I]): Either[String, Term[I]] = term match {
     case TmVar(info, name) =>
       env.get(name) match {
         case Some((_, Some(_term))) => Term.normalize(env, _term)
         case Some((_, None)) => Right(term)
-        case None => Left(s"${info.toString}: `$name` is not declared")
+        case None => Left(si.showMessage(info, s"`$name` is not declared"))
       }
     case TmConst(_, _) => Right(term)
     case TmApp(info, func, arg) => for {
@@ -250,12 +250,12 @@ object Term {
       } yield ret
   }
 
-  def weakNormalize[I](env: Env[I], term: Term[I]): Either[String, Term[I]] = term match {
+  def weakNormalize[I](env: Env[I], term: Term[I])(implicit si: SourceInfo[I]): Either[String, Term[I]] = term match {
     case TmVar(info, name) =>
       env.get(name) match {
         case Some((_, Some(_term))) => Term.weakNormalize(env, _term)
         case Some((_, None)) => Right(term)
-        case None => Left(s"${info.toString}: `$name` is not declared")
+        case None => Left(si.showMessage(info, s"`$name` is not declared"))
       }
     case TmConst(_, _) => Right(term)
     case TmApp(info, func, arg) => for {
