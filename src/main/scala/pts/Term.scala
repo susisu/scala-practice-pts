@@ -5,6 +5,8 @@ import scala.collection.immutable._
 sealed abstract class Term[+I] {
   val info: I
   val freeVars: Set[String]
+  def isConstant: Boolean = false
+  def isProduct: Boolean = false
   def renameFreeVar(oldName: String, newName: String): Term[I]
   def alphaEquals[J](term: Term[J]): Boolean
   def substitute[J >: I](name: String, term: Term[J]): Term[J]
@@ -12,9 +14,9 @@ sealed abstract class Term[+I] {
 
 // variable
 case class TmVar[+I](info: I, name: String) extends Term[I] {
-  val freeVars: Set[String] = Set(this.name)
-
   override def toString(): String = this.name
+
+  lazy val freeVars = Set(this.name)
 
   def renameFreeVar(oldName: String, newName: String): TmVar[I] =
     if (this.name == oldName)
@@ -36,9 +38,11 @@ case class TmVar[+I](info: I, name: String) extends Term[I] {
 
 // constant
 case class TmConst[+I](info: I, name: String) extends Term[I] {
-  val freeVars: Set[String] = Set.empty
-
   override def toString(): String = this.name
+
+  lazy val freeVars = Set.empty
+
+  override def isConstant = true
 
   def renameFreeVar(oldName: String, newName: String): TmConst[I] = this
 
@@ -52,8 +56,6 @@ case class TmConst[+I](info: I, name: String) extends Term[I] {
 
 // application
 case class TmApp[+I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
-  val freeVars: Set[String] = this.func.freeVars | this.arg.freeVars
-
   override def toString(): String = {
     val funcStr = this.func match {
       case TmVar(_, _) | TmConst(_, _) | TmApp(_, _, _) => this.func.toString
@@ -65,6 +67,8 @@ case class TmApp[+I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
     }
     funcStr + " " + argStr
   }
+
+  lazy val freeVars = this.func.freeVars | this.arg.freeVars
 
   def renameFreeVar(oldName: String, newName: String): TmApp[I] = {
     val _func = this.func.renameFreeVar(oldName, newName)
@@ -83,12 +87,12 @@ case class TmApp[+I](info: I, func: Term[I], arg: Term[I]) extends Term[I] {
 
 // abstraction
 case class TmAbs[+I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
-  val freeVars: Set[String] = this.paramType.freeVars | (this.body.freeVars - this.paramName)
-
   override def toString(): String =
     "fun " + this.paramName +
     ": " + this.paramType.toString +
     ". " + this.body.toString
+
+  lazy val freeVars = this.paramType.freeVars | (this.body.freeVars - this.paramName)
 
   def renameFreeVar(oldName: String, newName: String): TmAbs[I] = {
     val _paramType = this.paramType.renameFreeVar(oldName, newName)
@@ -136,8 +140,6 @@ case class TmAbs[+I](info: I, paramName: String, paramType: Term[I], body: Term[
 
 // product
 case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term[I]) extends Term[I] {
-  val freeVars: Set[String] = this.paramType.freeVars | (this.body.freeVars - this.paramName)
-
   override def toString(): String =
     if (!this.body.freeVars.contains(paramName)) {
       val domStr = this.paramType match {
@@ -149,6 +151,10 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
     else "forall " + this.paramName +
       ": " + this.paramType.toString +
       ". " + this.body.toString
+
+  lazy val freeVars = this.paramType.freeVars | (this.body.freeVars - this.paramName)
+
+  override def isProduct = true
 
   def renameFreeVar(oldName: String, newName: String): TmProd[I] = {
     val _paramType = this.paramType.renameFreeVar(oldName, newName)
@@ -205,49 +211,50 @@ object Term {
         case None => Left(si.showMessage(info, s"`$name` is not declared"))
       }
     case TmConst(_, _) => Right(term)
-    case TmApp(info, func, arg) => for {
-        _func <- Term.normalize(env, func);
-        _arg <- Term.normalize(env, arg);
-        ret <- _func match {
-          case TmAbs(_, paramName, _, body) => {
-            val _body = body.substitute(paramName, _arg)
-            Term.normalize(env, _body)
+    case TmApp(info, func, arg) =>
+      Term.normalize(env, func).flatMap { _func =>
+        Term.normalize(env, arg).flatMap { _arg =>
+          _func match {
+            case TmAbs(_, paramName, _, body) => {
+              val _body = body.substitute(paramName, _arg)
+              Term.normalize(env, _body)
+            }
+            case _ => Right(TmApp(info, _func, _arg))
           }
-          case _ => Right(TmApp(info, _func, _arg))
         }
-      } yield ret
-    case TmAbs(info, paramName, paramType, body) => for {
-        _paramType <- Term.normalize(env, paramType);
-        ret <- if (env.contains(paramName)) {
-            val _paramName = Util.getFreshVarName("_", env.keySet)
-            val _env = env + (_paramName -> ((_paramType, None)))
-            for {
-              _body <- Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
-            } yield TmAbs(info, _paramName, _paramType, _body)
+      }
+    case TmAbs(info, paramName, paramType, body) =>
+      Term.normalize(env, paramType).flatMap { _paramType =>
+        if (env.contains(paramName)) {
+          val _paramName = Util.getFreshVarName("_", env.keySet)
+          val _env = env + (_paramName -> ((_paramType, None)))
+          Term.normalize(_env, body.renameFreeVar(paramName, _paramName)).map {
+            TmAbs(info, _paramName, _paramType, _)
           }
-          else {
-            val _env = env + (paramName -> ((_paramType, None)))
-            for {
-              _body <- Term.normalize(_env, body)
-            } yield TmAbs(info, paramName, _paramType, _body)
+        }
+        else {
+          val _env = env + (paramName -> ((_paramType, None)))
+          Term.normalize(_env, body).map {
+            TmAbs(info, paramName, _paramType, _)
           }
-      } yield ret
-    case TmProd(info, paramName, paramType, body) => for {
-        _paramType <- Term.normalize(env, paramType);
-        ret <- if (env.contains(paramName)) {
-            val _paramName = Util.getFreshVarName("_", env.keySet)
-            val _env = env + (_paramName -> ((_paramType, None)))
-            for {
-              _body <- Term.normalize(_env, body.renameFreeVar(paramName, _paramName))
-            } yield TmProd(info, _paramName, _paramType, _body)
+        }
+      }
+    case TmProd(info, paramName, paramType, body) =>
+      Term.normalize(env, paramType).flatMap { _paramType =>
+        if (env.contains(paramName)) {
+          val _paramName = Util.getFreshVarName("_", env.keySet)
+          val _env = env + (_paramName -> ((_paramType, None)))
+          Term.normalize(_env, body.renameFreeVar(paramName, _paramName)).map {
+            TmProd(info, _paramName, _paramType, _)
           }
-          else {
-            val _env = env + (paramName -> ((_paramType, None)))
-            for {
-              _body <- Term.normalize(_env, body)
-            } yield TmProd(info, paramName, _paramType, _body)
+        }
+        else {
+          val _env = env + (paramName -> ((_paramType, None)))
+          Term.normalize(_env, body).map {
+            TmProd(info, paramName, _paramType, _)
           }
-      } yield ret
+        }
+      }
   }
 
   def weakNormalize[I](env: Env[I], term: Term[I])(implicit si: SourceInfo[I]): Either[String, Term[I]] = term match {
@@ -258,16 +265,14 @@ object Term {
         case None => Left(si.showMessage(info, s"`$name` is not declared"))
       }
     case TmConst(_, _) => Right(term)
-    case TmApp(info, func, arg) => for {
-        _func <- Term.weakNormalize(env, func);
-        ret <- _func match {
-          case TmAbs(_, paramName, _, body) => {
-            val _body = body.substitute(paramName, arg)
-            Term.weakNormalize(env, _body)
-          }
-          case _ => Right(TmApp(info, _func, arg))
+    case TmApp(info, func, arg) =>
+      Term.weakNormalize(env, func).flatMap {
+        case TmAbs(_, paramName, _, body) => {
+          val _body = body.substitute(paramName, arg)
+          Term.weakNormalize(env, _body)
         }
-      } yield ret
+        case _func => Right(TmApp(info, _func, arg))
+      }
     case TmAbs(_, _, _, _) | TmProd(_, _, _, _) => Right(term)
   }
 }
