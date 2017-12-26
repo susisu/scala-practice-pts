@@ -24,7 +24,7 @@ object Parser extends RegexParsers {
   override def skipWhitespace = true
   override val whiteSpace = "[ \t\r\n\f]+".r
 
-  val reservedWords: Set[String] = Set("fun", "forall", "assume", "define", "print", "compute")
+  val reservedNames: Set[String] = Set("fun", "forall")
 
   def tkLParen: Parser[TkLParen] = positioned ("("      ^^ { _ => TkLParen() })
   def tkRParen: Parser[TkRParen] = positioned (")"      ^^ { _ => TkRParen() })
@@ -36,7 +36,7 @@ object Parser extends RegexParsers {
   def tkUnder : Parser[TkUnder]  = positioned ("_"      ^^ { _ => TkUnder() })
 
   def tkIdent: Parser[TkIdent] = positioned (
-    "[A-Za-z][A-Za-z0-9_]*".r.filter { !reservedWords.contains(_) } ^^ { TkIdent(_) }
+    "[A-Za-z][A-Za-z0-9_]*".r.filter { !reservedNames.contains(_) } ^^ { TkIdent(_) }
   )
   def tkConst: Parser[TkConst] = positioned (raw"[\*#]".r ^^ { TkConst(_) })
 
