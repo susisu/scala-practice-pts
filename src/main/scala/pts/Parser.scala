@@ -20,6 +20,7 @@ object Parser extends RegexParsers {
   case class TkPrint() extends Token
   case class TkCompute() extends Token
   case class TkEqual() extends Token
+  case class TkSemi() extends Token
 
   override def skipWhitespace = true
   override val whiteSpace = "[ \t\r\n\f]+".r
@@ -45,6 +46,7 @@ object Parser extends RegexParsers {
   def tkPrint  : Parser[TkDefine] = positioned ("print"   ^^ { _ => TkDefine() })
   def tkCompute: Parser[TkDefine] = positioned ("compute" ^^ { _ => TkDefine() })
   def tkEqual  : Parser[TkEqual]  = positioned ("="       ^^ { _ => TkEqual() })
+  def tkSemi   : Parser[TkSemi]   = positioned (";"       ^^ { _ => TkSemi() })
 
   def pattern: Parser[String] =
       tkUnder ^^^ "_" |
@@ -99,5 +101,6 @@ object Parser extends RegexParsers {
     }
   def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inCompute
 
-  def instructions: Parser[List[Instruction[Position]]] = phrase(rep(instruction))
+  def instructions: Parser[List[Instruction[Position]]] =
+    phrase(repsep(instruction, tkSemi) <~ opt(tkSemi))
 }

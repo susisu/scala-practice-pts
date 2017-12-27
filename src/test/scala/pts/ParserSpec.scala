@@ -1,6 +1,7 @@
 package pts
 
 import org.scalatest._
+import scala.util.parsing.input._
 
 class ParserSpec extends FunSpec with Matchers {
   describe("term") {
@@ -182,6 +183,235 @@ class ParserSpec extends FunSpec with Matchers {
             )
           )
         ) should be (true)
+      }
+    }
+  }
+
+  describe("instruction") {
+    it("should parse an instruction") {
+      {
+        val res = Parser.parse(
+          Parser.instruction,
+          "assume bottom: forall T: *. T"
+        )
+        res.successful should be (true)
+        res.get.isInstanceOf[InAssume[Position]] should be (true)
+        val InAssume(_, name, itsType) = res.get
+        name should equal ("bottom")
+        itsType.alphaEquals(
+          TmProd((), "T",
+            TmConst((), "*"),
+            TmVar((), "T")
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(
+          Parser.instruction,
+          "define id = fun T: *. fun x: T. x"
+        )
+        res.successful should be (true)
+        res.get.isInstanceOf[InDefine[Position]] should be (true)
+        val InDefine(_, name, itsType, term) = res.get
+        name should equal ("id")
+        itsType shouldBe empty
+        term.alphaEquals(
+          TmAbs((), "T",
+            TmConst((), "*"),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
+            )
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(
+          Parser.instruction,
+          """
+            define id: forall T: *. T -> T = fun T: *. fun x: T. x
+          """
+        )
+        res.successful should be (true)
+        res.get.isInstanceOf[InDefine[Position]] should be (true)
+        val InDefine(_, name, itsType, term) = res.get
+        name should equal ("id")
+        itsType should not be empty
+        itsType.get.alphaEquals(
+          TmProd((), "T",
+            TmConst((), "*"),
+            TmProd((), "_",
+              TmVar((), "T"),
+              TmVar((), "T")
+            )
+          )
+        ) should be (true)
+        term.alphaEquals(
+          TmAbs((), "T",
+            TmConst((), "*"),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmVar((), "x")
+            )
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(
+          Parser.instruction,
+          "print bottom"
+        )
+        res.successful should be (true)
+        res.get.isInstanceOf[InPrint[Position]] should be (true)
+        val InPrint(_, name) = res.get
+        name should be ("bottom")
+      }
+      {
+        val res = Parser.parse(
+          Parser.instruction,
+          "compute (fun T: *. fun x: T. x) A a"
+        )
+        res.successful should be (true)
+        res.get.isInstanceOf[InCompute[Position]] should be (true)
+        val InCompute(_, term) = res.get
+        term.alphaEquals(
+          TmApp((),
+            TmApp((),
+              TmAbs((), "T",
+                TmConst((), "*"),
+                TmAbs((), "x",
+                  TmVar((), "T"),
+                  TmVar((), "x")
+                )
+              ),
+              TmVar((), "A")
+            ),
+            TmVar((), "a")
+          )
+        ) should be (true)
+      }
+    }
+  }
+
+  describe("instructions") {
+    it("should parser multiple instructions separated by semicolons") {
+      {
+        val res = Parser.parse(
+          Parser.instructions,
+          ""
+        )
+        res.successful should be (true)
+        res.get shouldBe empty
+      }
+      {
+        val res = Parser.parse(
+          Parser.instructions,
+          """
+          assume bottom: forall T: *. T
+          """
+        )
+        res.successful should be (true)
+        res.get should have length 1
+        res.get(0).isInstanceOf[InAssume[Position]] should be (true)
+        val InAssume(_, name, itsType) = res.get(0)
+        name should equal ("bottom")
+        itsType.alphaEquals(
+          TmProd((), "T",
+            TmConst((), "*"),
+            TmVar((), "T")
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(
+          Parser.instructions,
+          """
+          assume bottom: forall T: *. T;
+          """
+        )
+        res.successful should be (true)
+        res.get should have length 1
+        res.get(0).isInstanceOf[InAssume[Position]] should be (true)
+        val InAssume(_, name, itsType) = res.get(0)
+        name should equal ("bottom")
+        itsType.alphaEquals(
+          TmProd((), "T",
+            TmConst((), "*"),
+            TmVar((), "T")
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(
+          Parser.instructions,
+          """
+          assume bottom: forall T: *. T;
+          define id: forall T: *. T -> T = fun T: *. fun x: T. x;
+          print bottom;
+          compute (fun T: *. fun x: T. x) A a
+          """
+        )
+        res.successful should be (true)
+        res.get should have length 4;
+        {
+          res.get(0).isInstanceOf[InAssume[Position]] should be (true)
+          val InAssume(_, name, itsType) = res.get(0)
+          name should equal ("bottom")
+          itsType.alphaEquals(
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmVar((), "T")
+            )
+          ) should be (true)
+        }
+        {
+          res.get(1).isInstanceOf[InDefine[Position]] should be (true)
+          val InDefine(_, name, itsType, term) = res.get(1)
+          name should equal ("id")
+          itsType should not be empty
+          itsType.get.alphaEquals(
+            TmProd((), "T",
+              TmConst((), "*"),
+              TmProd((), "_",
+                TmVar((), "T"),
+                TmVar((), "T")
+              )
+            )
+          ) should be (true)
+          term.alphaEquals(
+            TmAbs((), "T",
+              TmConst((), "*"),
+              TmAbs((), "x",
+                TmVar((), "T"),
+                TmVar((), "x")
+              )
+            )
+          ) should be (true)
+        }
+        {
+          res.get(2).isInstanceOf[InPrint[Position]] should be (true)
+          val InPrint(_, name) = res.get(2)
+          name should be ("bottom")
+        }
+        {
+          res.get(3).isInstanceOf[InCompute[Position]] should be (true)
+          val InCompute(_, term) = res.get(3)
+          term.alphaEquals(
+            TmApp((),
+              TmApp((),
+                TmAbs((), "T",
+                  TmConst((), "*"),
+                  TmAbs((), "x",
+                    TmVar((), "T"),
+                    TmVar((), "x")
+                  )
+                ),
+                TmVar((), "A")
+              ),
+              TmVar((), "a")
+            )
+          ) should be (true)
+        }
       }
     }
   }
