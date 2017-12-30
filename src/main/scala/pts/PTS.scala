@@ -1,9 +1,8 @@
 package pts
 
-case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
-  private def when[A](test: Boolean)(proc: => Either[A, Unit]): Either[A, Unit] =
-    if (test) proc else Right(())
+import scalaz.std.either._
 
+case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
   def typeOf[I](env: Term.Env[I], term: Term[I])(implicit si: SourceInfo[I]): Either[String, Term[I]] =
     term match {
       case TmVar(info, name) =>
@@ -19,7 +18,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
       case TmApp(info, func, arg) => for {
         funcType <- this.typeOf(env, func);
         _funcType <- Term.weakNormalize(env, funcType);
-        _ <- when (!_funcType.isProduct) {
+        _ <- eitherMonad.whenM(!_funcType.isProduct) {
           Left(si.showMessage(
             func.info,
             s"function `${func.toString}` has type `${funcType.toString}`" +
@@ -30,7 +29,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
         argType <- this.typeOf(env, arg);
         _argType <- Term.normalize(env, argType);
         _paramType <- Term.normalize(env, paramType);
-        _ <- when (!argType.alphaEquals(_paramType)) {
+        _ <- eitherMonad.whenM(!argType.alphaEquals(_paramType)) {
           Left(si.showMessage(
             arg.info,
             s"argument `${arg.toString}` has type `${argType.toString}`" +
@@ -56,7 +55,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
           };
         termTypeType <- this.typeOf(env, termType);
         _termTypeType <- Term.weakNormalize(env, termTypeType);
-        _ <- when (!_termTypeType.isConstant) {
+        _ <- eitherMonad.whenM(!_termTypeType.isConstant) {
           Left(si.showMessage(
             info,
             s"abstraction `${term.toString}` has type `${termType.toString}`" +
@@ -64,7 +63,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
           ))
         }
         TmConst(_, sort) = _termTypeType;
-        _ <- when (!this.sorts.contains(sort)) {
+        _ <- eitherMonad.whenM(!this.sorts.contains(sort)) {
           Left(si.showMessage(
             info,
             s"abstraction `${term.toString}` has type `${termType.toString}`" +
@@ -75,7 +74,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
       case TmProd(info, paramName, paramType, body) => for {
         paramTypeType <- this.typeOf(env, paramType);
         _paramTypeType <- Term.weakNormalize(env, paramTypeType);
-        _ <- when (!_paramTypeType.isConstant) {
+        _ <- eitherMonad.whenM(!_paramTypeType.isConstant) {
           Left(si.showMessage(
             paramType.info,
             s"parameter type `${paramType.toString}` has type `${paramTypeType.toString}`" +
@@ -83,7 +82,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
           ))
         }
         TmConst(_, sort1) = _paramTypeType;
-        _ <- when (!this.sorts.contains(sort1)) {
+        _ <- eitherMonad.whenM(!this.sorts.contains(sort1)) {
           Left(si.showMessage(
             paramType.info,
             s"parameter type `${paramType.toString}` has type `${paramTypeType.toString}`" +
@@ -99,7 +98,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
             (env + (paramName -> ((paramType, None))), body);
         bodyType <- this.typeOf(_env, _body);
         _bodyType <- Term.weakNormalize(_env, bodyType);
-        _ <- when (!_bodyType.isConstant) {
+        _ <- eitherMonad.whenM(!_bodyType.isConstant) {
           Left(si.showMessage(
             body.info,
             s"body ${body.toString} has `${bodyType.toString}`" +
@@ -107,7 +106,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
           ))
         }
         TmConst(_, sort2) = _bodyType;
-        _ <- when (!this.sorts.contains(sort2)) {
+        _ <- eitherMonad.whenM(!this.sorts.contains(sort2)) {
           Left(si.showMessage(
             body.info,
             s"body ${body.toString} has `${bodyType.toString}`" +
@@ -115,7 +114,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
           ))
         }
         rule = this.rules.get((sort1, sort2));
-        _ <- when (rule.isEmpty) {
+        _ <- eitherMonad.whenM(rule.isEmpty) {
           Left(si.showMessage(
             info,
             s"no rule for sorts `$sort1`, `$sort2`"
