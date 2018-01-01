@@ -76,6 +76,17 @@ class InstructionSpec extends FunSpec with Matchers {
           val msg = res.left.get
           msg should include ("not declared")
         }
+        {
+          val itsType = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
+          )
+          val inst = InAssume((), "id", itsType)
+          val res = inst.exec(pts, env)
+          res.isLeft should be (true)
+          val msg = res.left.get
+          msg should include ("not a type")
+        }
       }
     }
   }

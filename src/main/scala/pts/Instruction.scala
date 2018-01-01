@@ -12,7 +12,14 @@ case class InAssume[+I](info: I, name: String, itsType: Term[I]) extends Instruc
     env.get(this.name) match {
       case Some(_) => Left(si.showMessage(this.info, s"`$name` is already declared"))
       case None => for {
-        _ <- pts.typeOf(env, this.itsType)
+        itsTypeType <- pts.typeOf(env, this.itsType)
+        _ <- eitherMonad.whenM(!itsTypeType.isConstant) {
+          Left(si.showMessage(this.info, s"`${itsType.toString}` is not a type"))
+        }
+        TmConst(_, sort) = itsTypeType
+        _ <- eitherMonad.whenM(!pts.sorts.contains(sort)) {
+          Left(si.showMessage(this.info, s"`${itsType.toString}` is not a type"))
+        }
       } yield (s"$name: ${this.itsType.toString}", env + (this.name -> ((this.itsType, None))))
     }
 }
