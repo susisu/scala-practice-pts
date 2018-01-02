@@ -90,4 +90,119 @@ class InstructionSpec extends FunSpec with Matchers {
       }
     }
   }
+
+  describe("InDefine[I]") {
+    describe("#exec") {
+      it("should add a term to the environment") {
+        {
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
+          )
+          val inst = InDefine((), "id", None, term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should include ("id")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "id" -> ((
+              TmProd((), "x",
+                TmVar((), "T"),
+                TmVar((), "T")
+              ),
+              Some(
+                TmAbs((), "x",
+                  TmVar((), "T"),
+                  TmVar((), "x")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
+          )
+          val itsType = TmApp((),
+            TmAbs((), "X",
+              TmConst((), "*"),
+              TmVar((), "X")
+            ),
+            TmProd((), "y",
+              TmVar((), "T"),
+              TmVar((), "T")
+            )
+          )
+          val inst = InDefine((), "id", Some(itsType), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should include ("id")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "id" -> ((
+              TmApp((),
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                ),
+                TmProd((), "y",
+                  TmVar((), "T"),
+                  TmVar((), "T")
+                )
+              ),
+              Some(
+                TmAbs((), "x",
+                  TmVar((), "T"),
+                  TmVar((), "x")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
+          )
+          val inst = InDefine((), "T", None, term)
+          val res = inst.exec(pts, env)
+          res.isLeft should be (true)
+          val msg = res.left.get
+          msg should include ("already declared")
+        }
+        {
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "y")
+          )
+          val inst = InDefine((), "id", None, term)
+          val res = inst.exec(pts, env)
+          res.isLeft should be (true)
+          val msg = res.left.get
+          msg should include ("not declared")
+        }
+        {
+          val term = TmAbs((), "x",
+            TmVar((), "T"),
+            TmVar((), "x")
+          )
+          val itsType = TmVar((), "T")
+          val inst = InDefine((), "id", Some(itsType), term)
+          val res = inst.exec(pts, env)
+          res.isLeft should be (true)
+          val msg = res.left.get
+          msg should include ("does not match")
+        }
+      }
+    }
+  }
 }

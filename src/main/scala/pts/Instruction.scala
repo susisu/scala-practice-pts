@@ -40,8 +40,7 @@ case class InDefine[+I](info: I, name: String, itsType: Option[Term[I]], term: T
           _ <- eitherMonad.whenM(!_termType.alphaEquals(_itsType)) {
             Left(si.showMessage(
               this.info,
-              s"`$name` is expected to have type `${itsType.toString}`" +
-              s"but it actually has `${termType.toString}`"
+              s"`${term.toString}` has type `${itsType.toString}` which does not match the expected type"
             ))
           }
         } yield (s"$name: ${itsType.toString}", env + (this.name -> ((itsType, Some(this.term)))))
