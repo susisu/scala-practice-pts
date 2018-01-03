@@ -3,24 +3,6 @@ package pts
 import org.scalatest._
 
 class InstructionSpec extends FunSpec with Matchers {
-  val pts = PTS(
-    Set("*", "#"),
-    Map("*" -> "#"),
-    Map(
-      ("*", "*") -> "*",
-      ("*", "#") -> "#",
-      ("#", "*") -> "*",
-      ("#", "#") -> "#"
-    )
-  )
-
-  val env = Map(
-    "T" -> ((
-      TmConst((), "*"),
-      None
-    ))
-  )
-
   implicit object UnitInfo extends SourceInfo[Unit] {
     type noInfoType = Unit
     def noInfo = ()
@@ -30,6 +12,22 @@ class InstructionSpec extends FunSpec with Matchers {
   describe("InAssume[I]") {
     describe("#exec") {
       it("should add an assumed variable to the environemnt") {
+        val pts = PTS(
+          Set("*", "#"),
+          Map("*" -> "#"),
+          Map(
+            ("*", "*") -> "*",
+            ("*", "#") -> "#",
+            ("#", "*") -> "*",
+            ("#", "#") -> "#"
+          )
+        )
+        val env = Map(
+          "T" -> ((
+            TmConst((), "*"),
+            None
+          ))
+        );
         {
           val itsType = TmProd((), "A",
             TmConst((), "*"),
@@ -94,6 +92,22 @@ class InstructionSpec extends FunSpec with Matchers {
   describe("InDefine[I]") {
     describe("#exec") {
       it("should add a term to the environment") {
+        val pts = PTS(
+          Set("*", "#"),
+          Map("*" -> "#"),
+          Map(
+            ("*", "*") -> "*",
+            ("*", "#") -> "#",
+            ("#", "*") -> "*",
+            ("#", "#") -> "#"
+          )
+        )
+        val env = Map(
+          "T" -> ((
+            TmConst((), "*"),
+            None
+          ))
+        );
         {
           val term = TmAbs((), "x",
             TmVar((), "T"),
@@ -201,6 +215,97 @@ class InstructionSpec extends FunSpec with Matchers {
           res.isLeft should be (true)
           val msg = res.left.get
           msg should include ("does not match")
+        }
+      }
+    }
+  }
+
+  describe("InPrint[I]") {
+    describe("#exec") {
+      it("should print the value of the declared variable") {
+        val pts = PTS(
+          Set("*", "#"),
+          Map("*" -> "#"),
+          Map(
+            ("*", "*") -> "*",
+            ("*", "#") -> "#",
+            ("#", "*") -> "*",
+            ("#", "#") -> "#"
+          )
+        )
+        val env = Map(
+          "T" -> ((
+            TmConst((), "*"),
+            None
+          )),
+          "Id" -> ((
+            TmProd((), "X",
+              TmConst((), "*"),
+              TmConst((), "*")
+            ),
+            Some(
+              TmAbs((), "X",
+                TmConst((), "*"),
+                TmVar((), "X")
+              )
+            )
+          ))
+        );
+        {
+          val inst = InPrint((), "T")
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("T: *")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val inst = InPrint((), "Id")
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("Id: * -> *\n= fun X: *. X")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val inst = InPrint((), "unknown")
+          val res = inst.exec(pts, env)
+          res.isLeft should be (true)
+          res.left.get should include ("not declared")
         }
       }
     }
