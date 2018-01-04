@@ -269,11 +269,11 @@ class ParserSpec extends FunSpec with Matchers {
       {
         val res = Parser.parse(
           Parser.instruction,
-          "compute (fun T: *. fun x: T. x) A a"
+          "reduce (fun T: *. fun x: T. x) A a"
         )
         res.successful should be (true)
-        res.get.isInstanceOf[InCompute[Position]] should be (true)
-        val InCompute(_, term) = res.get
+        res.get.isInstanceOf[InReduce[Position]] should be (true)
+        val InReduce(_, term) = res.get
         term.alphaEquals(
           TmApp((),
             TmApp((),
@@ -348,7 +348,7 @@ class ParserSpec extends FunSpec with Matchers {
           assume bottom: forall T: *. T;
           define id: forall T: *. T -> T = fun T: *. fun x: T. x;
           print bottom;
-          compute (fun T: *. fun x: T. x) A a
+          reduce (fun T: *. fun x: T. x) A a
           """
         )
         res.successful should be (true)
@@ -394,8 +394,8 @@ class ParserSpec extends FunSpec with Matchers {
           name should be ("bottom")
         }
         {
-          res.get(3).isInstanceOf[InCompute[Position]] should be (true)
-          val InCompute(_, term) = res.get(3)
+          res.get(3).isInstanceOf[InReduce[Position]] should be (true)
+          val InReduce(_, term) = res.get(3)
           term.alphaEquals(
             TmApp((),
               TmApp((),

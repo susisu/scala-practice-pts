@@ -18,7 +18,7 @@ object Parser extends RegexParsers {
   case class TkAssume() extends Token
   case class TkDefine() extends Token
   case class TkPrint() extends Token
-  case class TkCompute() extends Token
+  case class TkReduce() extends Token
   case class TkEqual() extends Token
   case class TkSemi() extends Token
 
@@ -41,12 +41,12 @@ object Parser extends RegexParsers {
   )
   def tkConst: Parser[TkConst] = positioned (raw"[\*#]".r ^^ { TkConst(_) })
 
-  def tkAssume : Parser[TkAssume] = positioned ("assume"  ^^ { _ => TkAssume() })
-  def tkDefine : Parser[TkDefine] = positioned ("define"  ^^ { _ => TkDefine() })
-  def tkPrint  : Parser[TkDefine] = positioned ("print"   ^^ { _ => TkDefine() })
-  def tkCompute: Parser[TkDefine] = positioned ("compute" ^^ { _ => TkDefine() })
-  def tkEqual  : Parser[TkEqual]  = positioned ("="       ^^ { _ => TkEqual() })
-  def tkSemi   : Parser[TkSemi]   = positioned (";"       ^^ { _ => TkSemi() })
+  def tkAssume: Parser[TkAssume] = positioned ("assume" ^^ { _ => TkAssume() })
+  def tkDefine: Parser[TkDefine] = positioned ("define" ^^ { _ => TkDefine() })
+  def tkPrint : Parser[TkPrint]  = positioned ("print"  ^^ { _ => TkPrint() })
+  def tkReduce: Parser[TkReduce] = positioned ("reduce" ^^ { _ => TkReduce() })
+  def tkEqual : Parser[TkEqual]  = positioned ("="      ^^ { _ => TkEqual() })
+  def tkSemi  : Parser[TkSemi]   = positioned (";"      ^^ { _ => TkSemi() })
 
   def pattern: Parser[String] =
       tkUnder ^^^ "_" |
@@ -95,11 +95,11 @@ object Parser extends RegexParsers {
     tkPrint ~ tkIdent ^^ {
       case head ~ ident => InPrint(head.pos, ident.name)
     }
-  def inCompute: Parser[InCompute[Position]] =
-    tkCompute ~ term ^^ {
-      case head ~ term => InCompute(head.pos, term)
+  def inReduce: Parser[InReduce[Position]] =
+    tkReduce ~ term ^^ {
+      case head ~ term => InReduce(head.pos, term)
     }
-  def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inCompute
+  def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inReduce
 
   def instructions: Parser[List[Instruction[Position]]] =
     phrase(repsep(instruction, tkSemi) <~ opt(tkSemi))

@@ -57,7 +57,7 @@ case class InPrint[+I](info: I, name: String) extends Instruction[I] {
     }
 }
 
-case class InCompute[+I](info: I, term: Term[I]) extends Instruction[I] {
+case class InReduce[+I](info: I, term: Term[I]) extends Instruction[I] {
   def exec[J >: I](pts: PTS, env: Term.Env[J])(implicit si: SourceInfo[J]): Either[String, (String, Term.Env[J])] =
     for {
       _ <- pts.typeOf(env, term);
