@@ -62,5 +62,5 @@ case class InReduce[+I](info: I, term: Term[I]) extends Instruction[I] {
     for {
       _ <- pts.typeOf(env, term);
       _term <- Term.normalize(env, term)
-    } yield (s"-> ${_term.toString}", env)
+    } yield (s"~> ${_term.toString}", env)
 }

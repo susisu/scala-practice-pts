@@ -310,4 +310,233 @@ class InstructionSpec extends FunSpec with Matchers {
       }
     }
   }
+
+  describe("InReduce[I]") {
+    describe("#exec") {
+      it("should reduce the given term and print it") {
+        val pts = PTS(
+          Set("*", "#"),
+          Map("*" -> "#"),
+          Map(
+            ("*", "*") -> "*",
+            ("*", "#") -> "#",
+            ("#", "*") -> "*",
+            ("#", "#") -> "#"
+          )
+        )
+        val env = Map(
+          "T" -> ((
+            TmConst((), "*"),
+            None
+          )),
+          "Id" -> ((
+            TmProd((), "X",
+              TmConst((), "*"),
+              TmConst((), "*")
+            ),
+            Some(
+              TmAbs((), "X",
+                TmConst((), "*"),
+                TmVar((), "X")
+              )
+            )
+          ))
+        );
+        {
+          val term = TmVar((), "T")
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("~> T")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmVar((), "Id")
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("~> fun X: *. X")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmConst((), "*")
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("~> *")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmApp((),
+            TmVar((), "Id"),
+            TmVar((), "T")
+          )
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("~> T")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmAbs((),
+            "U",
+            TmConst((), "*"),
+            TmApp((),
+              TmVar((), "Id"),
+              TmVar((), "U")
+            )
+          )
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("~> fun U: *. U")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmProd((),
+            "x",
+            TmApp((),
+              TmVar((), "Id"),
+              TmVar((), "T")
+            ),
+            TmConst((), "*")
+          )
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isRight should be (true)
+          val (msg, _env) = res.right.get
+          msg should be ("~> T -> *")
+          _env should equal (Map(
+            "T" -> ((
+              TmConst((), "*"),
+              None
+            )),
+            "Id" -> ((
+              TmProd((), "X",
+                TmConst((), "*"),
+                TmConst((), "*")
+              ),
+              Some(
+                TmAbs((), "X",
+                  TmConst((), "*"),
+                  TmVar((), "X")
+                )
+              )
+            ))
+          ))
+        }
+        {
+          val term = TmApp((),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmApp((),
+                TmVar((), "x"),
+                TmVar((), "x")
+              )
+            ),
+            TmAbs((), "x",
+              TmVar((), "T"),
+              TmApp((),
+                TmVar((), "x"),
+                TmVar((), "x")
+              )
+            )
+          )
+          val inst = InReduce((), term)
+          val res = inst.exec(pts, env)
+          res.isLeft should be (true)
+        }
+      }
+    }
+  }
 }
