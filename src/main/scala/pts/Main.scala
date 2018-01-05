@@ -14,10 +14,10 @@ object Main {
       repl(pts, env, "", "> ")
     }
     else {
-      val _buffer = buffer + line
+      val _buffer = buffer + line + "\n"
       if (_buffer.length > 0 && _buffer.charAt(0) == ':') {
         // command
-        val command = _buffer.substring(1)
+        val command = _buffer.substring(1).trim
         command match {
           case "q" | "e" | "quit" | "exit" => ()
           case _ => {
