@@ -34,13 +34,13 @@ case class InDefine[+I](info: I, name: String, itsType: Option[Term[I]], term: T
           } yield (s"$name: ${termType.toString}", env + (this.name -> ((termType, Some(this.term)))))
         case Some(itsType) => for {
           termType <- pts.typeOf(env, term);
-          _ <- pts.typeOf(env, itsType);
           _termType <- Term.normalize(env, termType);
+          _ <- pts.typeOf(env, itsType);
           _itsType <- Term.normalize(env, itsType);
           _ <- eitherMonad.whenM(!_termType.alphaEquals(_itsType)) {
             Left(si.showMessage(
               this.info,
-              s"`${term.toString}` has type `${itsType.toString}` which does not match the expected type"
+              s"`${term.toString}` has type `${termType.toString}` which does not match the expected type"
             ))
           }
         } yield (s"$name: ${itsType.toString}", env + (this.name -> ((itsType, Some(this.term)))))
