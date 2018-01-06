@@ -29,7 +29,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
         argType <- this.typeOf(env, arg);
         _argType <- Term.normalize(env, argType);
         _paramType <- Term.normalize(env, paramType);
-        _ <- eitherMonad.whenM(!argType.alphaEquals(_paramType)) {
+        _ <- eitherMonad.whenM(!_argType.alphaEquals(_paramType)) {
           Left(si.showMessage(
             arg.info,
             s"argument `${arg.toString}` has type `${argType.toString}`" +
