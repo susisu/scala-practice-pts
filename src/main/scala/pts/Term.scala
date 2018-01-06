@@ -96,12 +96,21 @@ case class TmAbs[+I](info: I, paramName: String, paramType: Term[I], body: Term[
 
   def renameFreeVar(oldName: String, newName: String): TmAbs[I] = {
     val _paramType = this.paramType.renameFreeVar(oldName, newName)
-    val _body =
-      if (this.paramName == oldName)
-        this.body
+    // if rename will occur in the body
+    if (this.paramName != oldName && this.body.freeVars.contains(oldName)) {
+      // if alpha-conversion is needed
+      if (this.paramName == newName) {
+        val usedNames = this.body.freeVars + newName
+        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _body = this.body.renameFreeVar(this.paramName, _paramName)
+          .renameFreeVar(oldName, newName)
+        TmAbs(this.info, _paramName, _paramType, _body)
+      }
       else
-        this.body.renameFreeVar(oldName, newName)
-    TmAbs(this.info, this.paramName, _paramType, _body)
+        TmAbs(this.info, this.paramName, _paramType, this.body.renameFreeVar(oldName, newName))
+    }
+    else
+      TmAbs(this.info, this.paramName, _paramType, this.body)
   }
 
   def alphaEquals[J](term: Term[J]): Boolean = term match {
@@ -158,12 +167,21 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
 
   def renameFreeVar(oldName: String, newName: String): TmProd[I] = {
     val _paramType = this.paramType.renameFreeVar(oldName, newName)
-    val _body =
-      if (this.paramName == oldName)
-        this.body
+    // if rename will occur in the body
+    if (this.paramName != oldName && this.body.freeVars.contains(oldName)) {
+      // if alpha-conversion is needed
+      if (this.paramName == newName) {
+        val usedNames = this.body.freeVars + newName
+        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _body = this.body.renameFreeVar(this.paramName, _paramName)
+          .renameFreeVar(oldName, newName)
+        TmProd(this.info, _paramName, _paramType, _body)
+      }
       else
-        this.body.renameFreeVar(oldName, newName)
-    TmProd(this.info, this.paramName, _paramType, _body)
+        TmProd(this.info, this.paramName, _paramType, this.body.renameFreeVar(oldName, newName))
+    }
+    else
+      TmProd(this.info, this.paramName, _paramType, this.body)
   }
 
   def alphaEquals[J](term: Term[J]): Boolean = term match {

@@ -372,6 +372,15 @@ class TermSpec extends FunSpec with Matchers {
             )
           )
         )
+        term.renameFreeVar("f", "x") should equal (
+          new TmAbs((), "_0",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "x"),
+              TmVar((), "_0")
+            )
+          )
+        )
       }
     }
 
@@ -584,6 +593,15 @@ class TermSpec extends FunSpec with Matchers {
             TmApp((),
               TmVar((), "f"),
               TmVar((), "x")
+            )
+          )
+        )
+        term.renameFreeVar("f", "x") should equal (
+          new TmProd((), "_0",
+            TmVar((), "T"),
+            TmApp((),
+              TmVar((), "x"),
+              TmVar((), "_0")
             )
           )
         )
