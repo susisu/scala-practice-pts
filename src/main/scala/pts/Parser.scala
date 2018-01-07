@@ -102,5 +102,5 @@ object Parser extends RegexParsers {
   def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inReduce
 
   def instructions: Parser[List[Instruction[Position]]] =
-    phrase(repsep(instruction, tkSemi) <~ opt(tkSemi))
+    phrase(rep(instruction <~ tkSemi))
 }

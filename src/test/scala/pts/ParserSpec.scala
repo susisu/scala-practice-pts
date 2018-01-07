@@ -294,7 +294,7 @@ class ParserSpec extends FunSpec with Matchers {
   }
 
   describe("instructions") {
-    it("should parser multiple instructions separated by semicolons") {
+    it("should parse multiple instructions separated by semicolons") {
       {
         val res = Parser.parse(
           Parser.instructions,
@@ -302,25 +302,6 @@ class ParserSpec extends FunSpec with Matchers {
         )
         res.successful should be (true)
         res.get shouldBe empty
-      }
-      {
-        val res = Parser.parse(
-          Parser.instructions,
-          """
-          assume bottom: forall T: *. T
-          """
-        )
-        res.successful should be (true)
-        res.get should have length 1
-        res.get(0).isInstanceOf[InAssume[Position]] should be (true)
-        val InAssume(_, name, itsType) = res.get(0)
-        name should equal ("bottom")
-        itsType.alphaEquals(
-          TmProd((), "T",
-            TmConst((), "*"),
-            TmVar((), "T")
-          )
-        ) should be (true)
       }
       {
         val res = Parser.parse(
@@ -348,7 +329,7 @@ class ParserSpec extends FunSpec with Matchers {
           assume bottom: forall T: *. T;
           define id: forall T: *. T -> T = fun T: *. fun x: T. x;
           print bottom;
-          reduce (fun T: *. fun x: T. x) A a
+          reduce (fun T: *. fun x: T. x) A a;
           """
         )
         res.successful should be (true)
@@ -412,6 +393,15 @@ class ParserSpec extends FunSpec with Matchers {
             )
           ) should be (true)
         }
+      }
+      {
+        val res = Parser.parse(
+          Parser.instructions,
+          """
+          assume bottom: forall T: *. T
+          """
+        )
+        res.successful should be (false)
       }
     }
   }
