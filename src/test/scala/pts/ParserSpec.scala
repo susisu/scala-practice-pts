@@ -228,9 +228,7 @@ class ParserSpec extends FunSpec with Matchers {
       {
         val res = Parser.parse(
           Parser.instruction,
-          """
-            define id: forall T: *. T -> T = fun T: *. fun x: T. x
-          """
+          "define id: forall T: *. T -> T = fun T: *. fun x: T. x"
         )
         res.successful should be (true)
         res.get.isInstanceOf[InDefine[Position]] should be (true)
@@ -289,6 +287,13 @@ class ParserSpec extends FunSpec with Matchers {
             TmVar((), "a")
           )
         ) should be (true)
+      }
+      {
+        val res = Parser.parse(
+          Parser.instruction,
+          "assumebottom: forall T: *. T"
+        )
+        res.successful should be (false)
       }
     }
   }

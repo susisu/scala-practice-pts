@@ -22,31 +22,35 @@ object Parser extends RegexParsers {
   case class TkEqual() extends Token
   case class TkSemi() extends Token
 
-  override def skipWhitespace = true
-  override val whiteSpace = "[ \t\r\n\f]+".r
+  override def skipWhitespace = false
+
+  def whitespace: Parser[Unit] = "[ \t\r\n\f]*".r ^^^ (())
+  def lex[T](p: Parser[T]): Parser[T] = p <~ whitespace
+  def word[T](p: Parser[T]): Parser[T] = lex(p <~ not("[A-Za-z0-9_]".r))
+  def op[T](p: Parser[T]): Parser[T] = lex(p <~ not(".:->=".r))
 
   val reservedNames: Set[String] = Set("fun", "forall")
 
-  def tkLParen: Parser[TkLParen] = positioned ("("      ^^ { _ => TkLParen() })
-  def tkRParen: Parser[TkRParen] = positioned (")"      ^^ { _ => TkRParen() })
-  def tkFun   : Parser[TkFun]    = positioned ("fun"    ^^ { _ => TkFun() })
-  def tkForall: Parser[TkFun]    = positioned ("forall" ^^ { _ => TkFun() })
-  def tkDot   : Parser[TkDot]    = positioned ("."      ^^ { _ => TkDot() })
-  def tkColon : Parser[TkColon]  = positioned (":"      ^^ { _ => TkColon() })
-  def tkArrow : Parser[TkArrow]  = positioned ("->"     ^^ { _ => TkArrow() })
-  def tkUnder : Parser[TkUnder]  = positioned ("_"      ^^ { _ => TkUnder() })
+  def tkLParen: Parser[TkLParen] = positioned(lex("(")       ^^ { _ => TkLParen() })
+  def tkRParen: Parser[TkRParen] = positioned(lex(")")       ^^ { _ => TkRParen() })
+  def tkFun   : Parser[TkFun]    = positioned(word("fun")    ^^ { _ => TkFun() })
+  def tkForall: Parser[TkFun]    = positioned(word("forall") ^^ { _ => TkFun() })
+  def tkDot   : Parser[TkDot]    = positioned(op(".")        ^^ { _ => TkDot() })
+  def tkColon : Parser[TkColon]  = positioned(op(":")        ^^ { _ => TkColon() })
+  def tkArrow : Parser[TkArrow]  = positioned(op("->")       ^^ { _ => TkArrow() })
+  def tkUnder : Parser[TkUnder]  = positioned(op("_")        ^^ { _ => TkUnder() })
 
-  def tkIdent: Parser[TkIdent] = positioned (
-    "[A-Za-z][A-Za-z0-9_]*".r.filter { !reservedNames.contains(_) } ^^ { TkIdent(_) }
+  def tkIdent: Parser[TkIdent] = positioned(
+    lex("[A-Za-z][A-Za-z0-9_]*".r.filter { !reservedNames.contains(_) }) ^^ { TkIdent(_) }
   )
-  def tkConst: Parser[TkConst] = positioned (raw"[\*#]".r ^^ { TkConst(_) })
+  def tkConst: Parser[TkConst] = positioned(lex(raw"[\*#]+".r) ^^ { TkConst(_) })
 
-  def tkAssume: Parser[TkAssume] = positioned ("assume" ^^ { _ => TkAssume() })
-  def tkDefine: Parser[TkDefine] = positioned ("define" ^^ { _ => TkDefine() })
-  def tkPrint : Parser[TkPrint]  = positioned ("print"  ^^ { _ => TkPrint() })
-  def tkReduce: Parser[TkReduce] = positioned ("reduce" ^^ { _ => TkReduce() })
-  def tkEqual : Parser[TkEqual]  = positioned ("="      ^^ { _ => TkEqual() })
-  def tkSemi  : Parser[TkSemi]   = positioned (";"      ^^ { _ => TkSemi() })
+  def tkAssume: Parser[TkAssume] = positioned(word("assume") ^^ { _ => TkAssume() })
+  def tkDefine: Parser[TkDefine] = positioned(word("define") ^^ { _ => TkDefine() })
+  def tkPrint : Parser[TkPrint]  = positioned(word("print")  ^^ { _ => TkPrint() })
+  def tkReduce: Parser[TkReduce] = positioned(word("reduce") ^^ { _ => TkReduce() })
+  def tkEqual : Parser[TkEqual]  = positioned(op("=")        ^^ { _ => TkEqual() })
+  def tkSemi  : Parser[TkSemi]   = positioned(lex(";")       ^^ { _ => TkSemi() })
 
   def pattern: Parser[String] =
       tkUnder ^^^ "_" |
@@ -102,5 +106,5 @@ object Parser extends RegexParsers {
   def instruction: Parser[Instruction[Position]] = inAssume | inDefine | inPrint | inReduce
 
   def instructions: Parser[List[Instruction[Position]]] =
-    phrase(rep(instruction <~ tkSemi))
+    phrase(whitespace ~> rep(instruction <~ tkSemi) <~ whitespace)
 }
