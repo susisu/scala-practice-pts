@@ -40,7 +40,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
       case TmAbs(info, paramName, paramType, body) => for {
         termType <-
           if (env.contains(paramName)) {
-            val _paramName = Util.getFreshVarName("_", env.keySet)
+            val _paramName = Util.getFreshVarName(paramName, env.keySet)
             val _body = body.renameFreeVar(paramName, _paramName)
             val _env = env + (_paramName -> ((paramType, None)))
             this.typeOf(_env, _body).map {
@@ -91,7 +91,7 @@ case class PTS(sorts: PTS.Sorts, axioms: PTS.Axioms, rules: PTS.Rules) {
         }
         (_env, _body) =
           if (env.contains(paramName)) {
-            val _paramName = Util.getFreshVarName("_", env.keySet)
+            val _paramName = Util.getFreshVarName(paramName, env.keySet)
             (env + (_paramName -> ((paramType, None))), body.renameFreeVar(paramName, _paramName))
           }
           else

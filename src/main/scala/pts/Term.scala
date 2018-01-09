@@ -172,7 +172,7 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
       // if alpha-conversion is needed
       if (this.paramName == newName) {
         val usedNames = this.body.freeVars + newName
-        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _paramName = Util.getFreshVarName(this.paramName, usedNames)
         val _body = this.body.renameFreeVar(this.paramName, _paramName)
           .renameFreeVar(oldName, newName)
         TmProd(this.info, _paramName, _paramType, _body)
@@ -188,7 +188,7 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
     case TmProd(_, paramName, paramType, body) => {
       if (this.paramType.alphaEquals(paramType)) {
         val usedNames = (this.body.freeVars - this.paramName) | (body.freeVars - paramName)
-        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _paramName = Util.getFreshVarName(this.paramName, usedNames)
         this.body.renameFreeVar(this.paramName, _paramName)
           .alphaEquals(body.renameFreeVar(paramName, _paramName))
       }
@@ -205,7 +205,7 @@ case class TmProd[+I](info: I, paramName: String, paramType: Term[I], body: Term
       // if alpha-conversion is needed
       if (term.freeVars.contains(this.paramName)) {
         val usedNames = term.freeVars | this.body.freeVars
-        val _paramName = Util.getFreshVarName("_", usedNames)
+        val _paramName = Util.getFreshVarName(this.paramName, usedNames)
         val _body = this.body.renameFreeVar(this.paramName, _paramName)
           .substitute(name, term)
         TmProd(this.info, _paramName, _paramType, _body)
@@ -244,7 +244,7 @@ object Term {
     case TmAbs(info, paramName, paramType, body) =>
       Term.normalize(env, paramType).flatMap { _paramType =>
         if (env.contains(paramName)) {
-          val _paramName = Util.getFreshVarName("_", env.keySet)
+          val _paramName = Util.getFreshVarName(paramName, env.keySet)
           val _env = env + (_paramName -> ((_paramType, None)))
           Term.normalize(_env, body.renameFreeVar(paramName, _paramName)).map {
             TmAbs(info, _paramName, _paramType, _)
@@ -260,7 +260,7 @@ object Term {
     case TmProd(info, paramName, paramType, body) =>
       Term.normalize(env, paramType).flatMap { _paramType =>
         if (env.contains(paramName)) {
-          val _paramName = Util.getFreshVarName("_", env.keySet)
+          val _paramName = Util.getFreshVarName(paramName, env.keySet)
           val _env = env + (_paramName -> ((_paramType, None)))
           Term.normalize(_env, body.renameFreeVar(paramName, _paramName)).map {
             TmProd(info, _paramName, _paramType, _)

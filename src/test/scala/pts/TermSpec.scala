@@ -597,11 +597,11 @@ class TermSpec extends FunSpec with Matchers {
           )
         )
         term.renameFreeVar("f", "x") should equal (
-          new TmProd((), "_0",
+          new TmProd((), "x0",
             TmVar((), "T"),
             TmApp((),
               TmVar((), "x"),
-              TmVar((), "_0")
+              TmVar((), "x0")
             )
           )
         )
@@ -660,11 +660,11 @@ class TermSpec extends FunSpec with Matchers {
             )
           )
           term.substitute("f", TmVar((), "x")) should equal (
-            TmProd((), "_0",
+            TmProd((), "x0",
               TmVar((), "T"),
               TmApp((),
                 TmVar((), "x"),
-                TmVar((), "_0")
+                TmVar((), "x0")
               )
             )
           )
@@ -799,9 +799,9 @@ class TermSpec extends FunSpec with Matchers {
             TmVar((), "x")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs((), "_0",
+            TmAbs((), "x0",
               TmVar((), "T"),
-              TmVar((), "_0")
+              TmVar((), "x0")
             )
           )
         }
@@ -811,7 +811,7 @@ class TermSpec extends FunSpec with Matchers {
             TmVar((), "z")
           )
           Term.normalize(env, term).right.get should equal (
-            TmAbs((), "_0",
+            TmAbs((), "x0",
               TmVar((), "T"),
               TmVar((), "x")
             )
@@ -859,9 +859,9 @@ class TermSpec extends FunSpec with Matchers {
             TmVar((), "x")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd((), "_0",
+            TmProd((), "x0",
               TmVar((), "T"),
-              TmVar((), "_0")
+              TmVar((), "x0")
             )
           )
         }
@@ -871,7 +871,7 @@ class TermSpec extends FunSpec with Matchers {
             TmVar((), "z")
           )
           Term.normalize(env, term).right.get should equal (
-            TmProd((), "_0",
+            TmProd((), "x0",
               TmVar((), "T"),
               TmVar((), "x")
             )
