@@ -123,6 +123,25 @@ class ParserSpec extends FunSpec with Matchers {
         ) should be (true)
       }
       {
+        val res = Parser.parse(Parser.term, "fun x: T, y: U. f x y")
+        res.successful should be (true)
+        res.get.alphaEquals(
+          TmAbs((), "x",
+            TmVar((), "T"),
+            TmAbs((), "y",
+              TmVar((), "U"),
+              TmApp((),
+                TmApp((),
+                  TmVar((), "f"),
+                  TmVar((), "x")
+                ),
+                TmVar((), "y")
+              )
+            )
+          )
+        ) should be (true)
+      }
+      {
         val res = Parser.parse(Parser.term, "forall T: *. P T")
         res.successful should be (true)
         res.get.alphaEquals(
@@ -131,6 +150,38 @@ class ParserSpec extends FunSpec with Matchers {
             TmApp((),
               TmVar((), "P"),
               TmVar((), "T")
+            )
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(Parser.term, "forall _: *. P T")
+        res.successful should be (true)
+        res.get.alphaEquals(
+          TmProd((), "_",
+            TmConst((), "*"),
+            TmApp((),
+              TmVar((), "P"),
+              TmVar((), "T")
+            )
+          )
+        ) should be (true)
+      }
+      {
+        val res = Parser.parse(Parser.term, "forall T: *, U: *. P T U")
+        res.successful should be (true)
+        res.get.alphaEquals(
+          TmProd((), "T",
+            TmConst((), "*"),
+            TmProd((), "U",
+              TmConst((), "*"),
+              TmApp((),
+                TmApp((),
+                  TmVar((), "P"),
+                  TmVar((), "T")
+                ),
+                TmVar((), "U")
+              )
             )
           )
         ) should be (true)

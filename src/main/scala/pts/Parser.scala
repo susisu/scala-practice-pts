@@ -9,6 +9,7 @@ object Parser extends RegexParsers {
   case class TkRParen() extends Token
   case class TkFun() extends Token
   case class TkForall() extends Token
+  case class TkComma() extends Token
   case class TkDot() extends Token
   case class TkColon() extends Token
   case class TkArrow() extends Token
@@ -35,6 +36,7 @@ object Parser extends RegexParsers {
   def tkRParen: Parser[TkRParen] = positioned(lex(")")       ^^ { _ => TkRParen() })
   def tkFun   : Parser[TkFun]    = positioned(word("fun")    ^^ { _ => TkFun() })
   def tkForall: Parser[TkFun]    = positioned(word("forall") ^^ { _ => TkFun() })
+  def tkComma : Parser[TkComma]  = positioned(op(",")        ^^ { _ => TkComma() })
   def tkDot   : Parser[TkDot]    = positioned(op(".")        ^^ { _ => TkDot() })
   def tkColon : Parser[TkColon]  = positioned(op(":")        ^^ { _ => TkColon() })
   def tkArrow : Parser[TkArrow]  = positioned(op("->")       ^^ { _ => TkArrow() })
@@ -52,10 +54,6 @@ object Parser extends RegexParsers {
   def tkEqual : Parser[TkEqual]  = positioned(op("=")        ^^ { _ => TkEqual() })
   def tkSemi  : Parser[TkSemi]   = positioned(lex(";")       ^^ { _ => TkSemi() })
 
-  def pattern: Parser[String] =
-      tkUnder ^^^ "_" |
-      tkIdent ^^ { _.name }
-
   def tmVar: Parser[TmVar[Position]] =
     tkIdent ^^ { token => TmVar(token.pos, token.name) }
   def tmConst: Parser[TmConst[Position]] =
@@ -70,15 +68,23 @@ object Parser extends RegexParsers {
         case (acc, arg) => TmApp(arg.info, acc, arg)
       }
     }
-  def tmAbs: Parser[TmAbs[Position]] =
-    tkFun ~ pattern ~ (tkColon ~> term) ~ (tkDot ~> term) ^^ {
-      case head ~ paramName ~ paramType ~ body =>
-        TmAbs(head.pos, paramName, paramType, body)
+  def pattern: Parser[String] =
+      tkUnder ^^^ "_" |
+      tkIdent ^^ { _.name }
+  def binding: Parser[String ~ Term[Position]] = pattern ~ (tkColon ~> term)
+  def tmAbs: Parser[Term[Position]] =
+    tkFun ~ rep1sep(binding, tkComma) ~ (tkDot ~> term) ^^ {
+      case head ~ bindings ~ body =>
+        bindings.foldRight(body) {
+          case (paramName ~ paramType, rest) => TmAbs(head.pos, paramName, paramType, rest)
+        }
     }
-  def tmProd: Parser[TmProd[Position]] =
-    tkForall ~ pattern ~ (tkColon ~> term) ~ (tkDot ~> term) ^^ {
-      case head ~ paramName ~ paramType ~ body =>
-        TmProd(head.pos, paramName, paramType, body)
+  def tmProd: Parser[Term[Position]] =
+    tkForall ~ rep1sep(binding, tkComma) ~ (tkDot ~> term) ^^ {
+      case head ~ bindings ~ body =>
+        bindings.foldRight(body) {
+          case (paramName ~ paramType, rest) => TmProd(head.pos, paramName, paramType, rest)
+        }
     }
   def tmArrow: Parser[Term[Position]] =
     tmApp ~ opt(tkArrow ~ term) ^^ {
